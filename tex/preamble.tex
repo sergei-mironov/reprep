@@ -1,0 +1,135 @@
+\usepackage[utf8]{inputenc}
+% \usepackage[T1]{fontenc}
+\usepackage[total={6.2in, 8in}]{geometry}
+
+\usepackage{amsmath, amsthm, amssymb,amsfonts, mathtools}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage[percent]{overpic} %writing over pictures
+\usepackage{xcolor}
+\usepackage{appendix}
+
+\usepackage{mdframed}
+\usepackage[colorlinks,urlcolor=blue]{hyperref}
+\usepackage{verbatim}
+%\usepackage{fancyvrb}
+\usepackage{minted}
+\renewcommand{\MintedPygmentize}{pygmentize}
+\usepackage[ruled,linesnumbered]{algorithm2e}
+\setlength{\algomargin}{10pt}
+\usepackage[normalem]{ulem}
+\usepackage{varwidth}
+
+\usepackage{biblatex}
+\addbibresource{main.bib}
+
+\usepackage{listings}
+\usepackage{tikz-cd}
+\usepackage{enumitem}
+\usepackage{tikzsymbols}
+
+\lstset{
+basicstyle=\small\ttfamily,
+columns=flexible,
+breaklines=true
+}
+\usepackage{tikz}
+
+\setlength{\parindent}{0pt}
+
+\newcommand{\ket}[1]{\left|{#1}\right\rangle}
+\newcommand{\bra}[1]{\left\langle{#1}\right|}
+\newcommand{\BS}{\backslash}
+
+\newcommand{\CLR}[2]{\begingroup\color{#1}#2\endgroup}
+\newcommand{\R}[1]{\begingroup\color{red}#1\endgroup}
+\newcommand{\G}[1]{\begingroup\color{green}#1\endgroup}
+\newcommand{\B}[1]{\begingroup\color{blue}#1\endgroup}
+\newcommand{\Y}[1]{\begingroup\color{yellow}#1\endgroup}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\Rational}{\mathbb{R}}
+\newcommand{\Rat}{\mathbb{R}}
+\newcommand{\Pow}{\mathbb{P}}
+
+\newcommand{\vsp}[0]{\vspace*{10pt}\par}
+\newcommand{\tcite}[1]{\textit{(\citefield{#1}{year}, \citeauthor{#1})}\:\textit{``\citefield{#1}{title}''}\:\cite{#1}}
+\newcommand{\exercise}[1]{\subsubsection*{#1}}
+\newcommand{\ans}[0]{\vsp\textbf{Answer: }\vsp}
+\newcommand{\problem}[0]{\vsp\textbf{Problem: }\vsp}
+\newcommand{\unsure}[0]{TODO: (\textbf{unsure}) }
+
+\newcommand{\JProg}{\mathbb{J}}
+\newcommand{\AST}{\mathbb{AST}}
+\newcommand{\TNET}{\mathbb{TNET}}
+\newcommand{\CV}{\Rational^N}
+\newcommand{\U}[1]{{\underline{#1}}}
+\newcommand{\REM}[1]{\tcp*{\parbox[t]{2.0in}{\raggedright #1}}}
+
+\newcommand{\toto}[0]{\begin{array}{c}\rightarrow \\[-1.9ex]\rightarrow\end{array}}
+
+\newcommand{\ei}{\item}
+\newcommand{\es}{\begin{enumerate}[label=(\alph*)]\ei}
+\newcommand{\ee}{\end{enumerate}}
+
+\newcommand{\ls}{\begin{itemize}\item}
+\newcommand{\li}{\item}
+\renewcommand{\le}{\end{itemize}}
+
+% Define \set{} command. TODO: Looks too complicated!
+\DeclarePairedDelimiterX{\set}[1]{\{}{\}}{\setargs{#1}}
+\NewDocumentCommand{\setargs}{>{\SplitArgument{1}{;}}m}
+{\setargsaux#1}
+\NewDocumentCommand{\setargsaux}{mm}
+{\IfNoValueTF{#2}{#1} {#1\,\delimsize|\,\mathopen{}#2}}%{#1\:;\:#2}
+
+% Generic environment for code snippets
+\newenvironment{codeverbatim}
+  {\VerbatimEnvironment
+   \begin{minted}[autogobble,breaklines,fontsize=\footnotesize]{latex}}
+  {\end{minted}}
+\BeforeBeginEnvironment{codeverbatim}{\begin{mdframed}[nobreak=true,frametitle=\tiny{Source}]}
+\AfterEndEnvironment{codeverbatim}{\end{mdframed}}
+
+% LitREPL-compatible environment for code snippets
+\newenvironment{python}
+  {\VerbatimEnvironment
+   \begin{minted}[autogobble,breaklines,fontsize=\footnotesize]{python}}
+  {\end{minted}}
+\BeforeBeginEnvironment{python}{\begin{mdframed}[nobreak=false,everyline=true,frametitle=\tiny{Python}]}
+\AfterEndEnvironment{python}{\end{mdframed}}
+
+% LitREPL-compatible environment for code snippets
+\newenvironment{codeai}
+  {\VerbatimEnvironment
+   \begin{minted}[autogobble,breaklines,fontsize=\footnotesize]{text}}
+  {\end{minted}}
+\BeforeBeginEnvironment{codeai}{\begin{mdframed}[nobreak=true,frametitle=\tiny{AI}]}
+\AfterEndEnvironment{codeai}{\end{mdframed}}
+
+\newenvironment{ai}
+  {\vsp\textbf{User:}\vsp}
+  {}
+\newenvironment{airesult}
+  {\vsp\textbf{AI:}\vsp}
+  {}
+% \newenvironment{ai}
+%   {\VerbatimEnvironment
+%    \begin{minted}[autogobble,breaklines,fontsize=\footnotesize]{text}}
+%   {\end{minted}}
+% \BeforeBeginEnvironment{ai}{\begin{mdframed}[nobreak=true,frametitle=\tiny{AI}]}
+% \AfterEndEnvironment{ai}{\end{mdframed}}
+
+% LitREPL-compatible environment for code results
+\newenvironment{result}
+  {\VerbatimEnvironment
+   \begin{minted}[autogobble,breaklines,fontsize=\footnotesize]{text}}
+  {\end{minted}}
+\BeforeBeginEnvironment{result}{\begin{mdframed}[nobreak=true,frametitle=\tiny{Result}]}
+\AfterEndEnvironment{result}{\end{mdframed}}
+
+% LitREPL-compatible command for inline code results
+\newcommand{\linline}[2]{#2}
+\newcommand{\st}[1]{\sout{#1}}
+\renewcommand{\t}[1]{\texttt{#1}}
+
