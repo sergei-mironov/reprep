@@ -6,25 +6,37 @@
 \setcounter{secnumdepth}{4}
 % \RedeclareSectionCommand[runin=false,afterskip=0pt,afterindent=false]{paragraph}
 
-\title{Brothers on the bridge problem}
+\title{Brothers on a bridge problem}
 \author{Sergei Mironov}
 
 \begin{document}
 
 \maketitle
+
+\section{Abstract}
+Solving the Brothers on a bridge problem using Google OR tools and the AI
+model. The problem sounds as follows:
+\vsp
+
+\textit{Four brothers want to cross a suspension bridge at night. The bridge
+can hold a maximum of 2 people together with a flashlight. They only have one
+flashlight between them, which means someone will need to bring it back across
+the bridge each time. Each brother crosses at a different speed: the oldest
+brother can cross the bridge in 1 minute, the second can cross in 2 minutes,
+the third in 5 minutes, and the youngest in 10 minutes.}
+
 \tableofcontents
+
 \section{Setup}
 
 \begin{python}
 import ortools
 from ortools.linear_solver import pywraplp
 print(ortools.__version__)
-print("OK")
 \end{python}
 
 \begin{result}
 9.4.9999
-OK
 \end{result}
 
 \begin{codeai}
@@ -463,7 +475,7 @@ Time 6, Direction 1: Brothers [0] crossing
 Time 7, Direction 0: Brothers [0, 1] crossing
 \end{result}
 
-\section{Model checks}
+\section{Querying LLM models}
 
 \subsection{Checking the times: 1,3,8,12. (Correct, the solution is 22)}
 
