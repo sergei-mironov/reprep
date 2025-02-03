@@ -3,7 +3,6 @@ Latex documents and evaluated with the [Litrepl](https://github.com/sergei-miron
 The helper LLM model used in these writings was communicated using the
 [aicli](https://github.com/sergei-mironov/aicli) interpreter.
 
-
 <!--
 ``` sh
 (cd tex;

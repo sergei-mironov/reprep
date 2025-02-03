@@ -1,5 +1,5 @@
 {
-  description = "Python project with SciPy and extensive LaTeX setup";
+  description = "Technical notes";
 
   inputs = {
     nixpkgs = {
@@ -34,7 +34,7 @@
 
         shellHook = ''
           # Custom shell prompt
-          export PS1="\[\033[01;34m\] python-scipy \\w \[\033[00m\]$ "
+          export PS1="\[\033[01;34m\]technotes \\w \[\033[00m\]$ "
           export PROJECT_ROOT=`pwd`
           export PATH=$PROJECT_ROOT/sh:$PATH
 

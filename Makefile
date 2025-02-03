@@ -1,13 +1,10 @@
 .PHONY: all
 
-all: tex/main.pdf
+TEX=$(shell find tex -name '*.tex')
+PDF=$(subst .tex,.pdf,$(shell find tex -name '*.tex' | grep -v preamble))
 
-tex/%.pdf: tex/preamble.tex tex/%.tex
-	cd tex && \
-	latexmk -shell-escape -pdf -interaction=nonstopmode \
-	        -latex=pdflatex --halt-on-error $*.tex
+.PHONY: all
+all: $(PDF)
 
-_ai/%.pdf: tex/preamble.tex _ai/%.tex
-	cd _ai && \
-	latexmk -shell-escape -pdf -interaction=nonstopmode \
-	        -latex=pdflatex --halt-on-error $*.tex
+$(PDF): $(TEX)
+	$(MAKE) -C tex $(notdir $@)
