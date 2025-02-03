@@ -92,6 +92,14 @@ breaklines=true
 \AfterEndEnvironment{codeverbatim}{\end{mdframed}}
 
 % LitREPL-compatible environment for code snippets
+\newenvironment{cpp}
+  {\VerbatimEnvironment
+   \begin{minted}[autogobble,breaklines,fontsize=\footnotesize]{cpp}}
+  {\end{minted}}
+\BeforeBeginEnvironment{cpp}{\begin{mdframed}[nobreak=false,everyline=true,frametitle=\tiny{C++}]}
+\AfterEndEnvironment{cpp}{\end{mdframed}}
+
+% LitREPL-compatible environment for code snippets
 \newenvironment{python}
   {\VerbatimEnvironment
    \begin{minted}[autogobble,breaklines,fontsize=\footnotesize]{python}}
