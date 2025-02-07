@@ -1,6 +1,6 @@
 This repository contains technical surveys on various topics. The notes are formatted as literate
 Latex documents and evaluated with the [Litrepl](https://github.com/sergei-mironov/litrepl) tool.
-The helper LLM model used in these writings was communicated using the
+The assistant LLM model employed in these writings was accessed via the
 [aicli](https://github.com/sergei-mironov/aicli) interpreter.
 
 <!--
