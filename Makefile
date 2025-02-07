@@ -1,11 +1,11 @@
 .PHONY: all
 
-TEX=$(shell find tex -name '*.tex')
-TXT=$(shell find tex -name '*.txt')
-PDF=$(subst .tex,.pdf,$(shell find tex -name '*.tex' | grep -v preamble))
+TEX=$(shell find tex -name '[^_]*.tex')
+YAML=$(shell find tex -name '*.yaml')
+PDF=$(subst .yaml,.pdf,$(YAML))
 
 .PHONY: all
 all: $(PDF)
 
-$(PDF): $(TEX) $(TXT)
+$(PDF): $(TEX) $(TXT) $(YAML)
 	$(MAKE) -C tex $(notdir $@)
