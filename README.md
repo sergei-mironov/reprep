@@ -7,15 +7,16 @@ The helper LLM model used in these writings was communicated using the
 ``` sh
 (cd tex;
 FIRST=y
-for f in $(ls -1 *tex | grep -v preamble.tex) ; do
+for f in $(ls -1 *tex | grep -v preamble.tex | grep -v '^_' | grep -v 'template') ; do
   NM=`basename $f .tex`
   TEX=$f
   PDF=$NM.pdf
-  echo -n "$NM [[TEX](./tex/$TEX)] [[PDF](./tex/$PDF)]"
   if test "$FIRST" = "y" ; then
-    echo -n " | "
     FIRST=n
+  else
+    echo -n " | "
   fi
+  echo -n "$NM [[TEX](./tex/$TEX)] [[PDF](./tex/$PDF)]"
 done
 )
 ```
@@ -23,5 +24,7 @@ done
 
 <!--result-->
 C3-inheritance [[TEX](./tex/C3-inheritance.tex)] [[PDF](./tex/C3-inheritance.pdf)] |
-brothers-on-bridge [[TEX](./tex/brothers-on-bridge.tex)] [[PDF](./tex/brothers-on-bridge.pdf)]
+brothers-on-bridge [[TEX](./tex/brothers-on-bridge.tex)] [[PDF](./tex/brothers-on-bridge.pdf)] |
+chernoff-bound-vs-qthreshhold [[TEX](./tex/chernoff-bound-vs-qthreshhold.tex)]
+[[PDF](./tex/chernoff-bound-vs-qthreshhold.pdf)]
 <!--noresult-->

@@ -26,11 +26,14 @@
         x86_64-linux = self.devEnvironment;
       };
       devEnvironment = pkgs.mkShell {
-        buildInputs = [
+        buildInputs = ([
           (pkgs.python3.withPackages (p: with p; [ ipython scipy ortools python-lsp-server]))
           texliveFull
-          pkgs.xdotool
-        ];
+        ]) ++
+        (with pkgs ; [
+          xdotool
+          yq
+        ]);
 
         shellHook = ''
           # Custom shell prompt
