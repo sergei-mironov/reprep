@@ -1,0 +1,345 @@
+\section{Setup}
+
+We are walking through the
+\u{Building a quantum lock using phase kickback}{https://pennylane.ai/qml/demos/tutorial_phase_kickback}
+tutorial by Danial Motlagh.
+
+\begin{python}
+import pennylane as qml
+import numpy as np
+import matplotlib.pyplot as plt
+qml.drawer.use_style("black_white")
+\end{python}
+
+\begin{result}
+\end{result}
+
+\section{Implementation}
+
+\begin{python}
+import pennylane as qml
+import numpy as np
+
+num_wires = 5
+dev = qml.device("default.qubit", wires=num_wires, shots=1)
+
+def quantum_lock(secret_key):
+  return qml.FlipSign(secret_key, wires=list(range(1, num_wires)))
+
+def build_key(key):
+  return qml.BasisState(key, wires=list(range(1, num_wires)))
+
+@qml.qnode(dev)
+def quantum_locking_mechanism(lock, key):
+  build_key(key)
+  qml.Hadamard(wires=0)  # Hadamard on ancilla qubit
+  qml.ctrl(lock, control=0)  # Controlled unitary operation
+  qml.Hadamard(wires=0)  # Hadamard again on ancilla qubit
+  return qml.sample(wires=0)
+
+def check_key(lock, key):
+  if quantum_locking_mechanism(lock, key) == 1:
+    print("Great job, you have uncovered the mysteries of the quantum universe!")
+  else:
+    print("Nice try, but that's not the right key!")
+
+qml.draw_mpl(quantum_locking_mechanism)(lock, secret_key)
+plt.savefig('img/fig.pdf')
+\end{python}
+
+\begin{result}
+
+\end{result}
+
+\begin{center}
+\includegraphics[width=0.5\linewidth]{img/fig.pdf}
+\end{center}
+
+Running the experiment
+
+\begin{python}
+secret_key = np.array([0, 1, 1, 1])
+lock = quantum_lock(secret_key)
+check_key(lock, secret_key)
+\end{python}
+
+\begin{result}
+Great job, you have uncovered the mysteries of the quantum universe!
+\end{result}
+
+
+\section{Discussion}
+
+\begin{ai}
+Hi Ai. Lets discuss this quantum program in PennyLane. It illustrates the Phase kickback.
+
+\begin{python}
+num_wires = 5
+dev = qml.device("default.qubit", wires=num_wires, shots=1)
+
+def quantum_lock(secret_key):
+  return qml.FlipSign(secret_key, wires=list(range(1, num_wires)))
+
+def build_key(key):
+  return qml.BasisState(key, wires=list(range(1, num_wires)))
+
+@qml.qnode(dev)
+def quantum_locking_mechanism(lock, key):
+  build_key(key)
+  qml.Hadamard(wires=0)  # Hadamard on ancilla qubit
+  qml.ctrl(lock, control=0)  # Controlled unitary operation
+  qml.Hadamard(wires=0)  # Hadamard again on ancilla qubit
+  return qml.sample(wires=0)
+\end{python}
+
+Can you try to generate an equation corresponding to this circuit?
+\end{ai}
+
+\begin{airesult}
+Sure, let's analyze the quantum program you've presented and express its operations as an equation.
+This code is implementing a variant of the phase kickback mechanism using controlled operations.
+We'll break down the steps:
+
+\begin{enumerate}
+\item **Initialization**: It initializes the key via the \verb|BasisState| operation.
+\item **Hadamard Gate**: It applies a Hadamard gate to the first qubit, putting it into
+superposition.
+\item **Controlled Operation**: It applies a controlled operation (\verb|ctrl|) which depends on the
+secret lock function.
+\item **Final Hadamard Gate**: It applies another Hadamard gate to the first qubit before sampling
+it.
+\end{enumerate}
+
+The circuit can be described by the following sequence of operations:
+
+\[
+\text{Hadamard} \rightarrow \text{Controlled-Lock} \rightarrow \text{Hadamard}
+\]
+
+Given that the \textit{quantum lock} is represented by a \verb|FlipSign| operation, we can express
+the effect on the initial state of the system. Using \(|\psi\rangle\) to denote the initial state of
+the ancillary qubits representing the key, and assuming the control qubit is initially in the state
+\(|0\rangle\), the transformation is given by:
+
+\vsp
+
+\[
+\text{Initial State: } |0\rangle \otimes |\psi\rangle
+\]
+
+Applying the Hadamard on the control qubit:
+
+\[
+H|0\rangle = \dfrac{1}{\sqrt{2}}(|0\rangle + |1\rangle)
+\]
+
+Controlled operation with \verb|FlipSign|, dependent on whether the control qubit is \(|1\rangle\):
+
+\[
+\dfrac{1}{\sqrt{2}}(|0\rangle \otimes |\psi\rangle + |1\rangle \otimes
+\text{FlipSign}(|\psi\rangle))
+\]
+
+Finally, applying the Hadamard on the control qubit to complete the phase kickback process:
+
+\[
+H \left(\dfrac{1}{\sqrt{2}}(|0\rangle \otimes |\psi\rangle + |1\rangle \otimes
+\text{FlipSign}(|\psi\rangle))\right)
+\]
+
+When we sample, we effectively measure the final state of the control qubit, which gives us insight
+into the key.
+
+\vsp
+
+This equation outlines the process described by the program in PennyLane, depicting how the initial
+state is manipulated to exhibit phase kickback.
+\end{airesult}
+
+
+\begin{ai}
+Can you break down the last equation, namely:
+
+\[
+H \left(\dfrac{1}{\sqrt{2}}(|0\rangle \otimes |\psi\rangle + |1\rangle \otimes
+\text{FlipSign}(|\psi\rangle))\right)
+\]
+
+I'd like you to apply this Hadamard to the first qubit and write down the result
+\end{ai}
+
+\begin{airesult}
+Certainly! Let's break down the equation step by step by applying the Hadamard gate to the control
+qubit component inside the expression:
+
+\vsp
+
+Our initial expression is:
+
+\[
+H \left(\dfrac{1}{\sqrt{2}} \left( |0\rangle \otimes |\psi\rangle + |1\rangle \otimes
+\text{FlipSign}(|\psi\rangle) \right) \right)
+\]
+
+The Hadamard gate \( H \) applied on a single qubit can be represented as:
+
+\[
+H = \dfrac{1}{\sqrt{2}} \begin{pmatrix} 1 & 1 \\ 1 & -1 \end{pmatrix}
+\]
+
+Applying this Hadamard gate to our expression means we are operating on the control qubit states
+\(|0\rangle\) and \(|1\rangle\):
+
+\[
+H |0\rangle = \dfrac{1}{\sqrt{2}} (|0\rangle + |1\rangle)
+\]
+\[
+H |1\rangle = \dfrac{1}{\sqrt{2}} (|0\rangle - |1\rangle)
+\]
+
+Substituting these transformations into our original expression, we get:
+
+\[
+= \dfrac{1}{\sqrt{2}} \left( H|0\rangle \otimes |\psi\rangle + H|1\rangle \otimes
+\text{FlipSign}(|\psi\rangle) \right)
+\]
+
+Applying the transformations:
+
+\[
+= \dfrac{1}{\sqrt{2}} \left( \dfrac{1}{\sqrt{2}} (|0\rangle + |1\rangle) \otimes |\psi\rangle
++ \dfrac{1}{\sqrt{2}} (|0\rangle - |1\rangle) \otimes \text{FlipSign}(|\psi\rangle) \right)
+\]
+
+Simplifying further:
+
+\[
+= \dfrac{1}{2} \left( |0\rangle \otimes |\psi\rangle + |1\rangle \otimes |\psi\rangle
++ |0\rangle \otimes \text{FlipSign}(|\psi\rangle) - |1\rangle \otimes \text{FlipSign}(|\psi\rangle)
+\right)
+\]
+
+Finally, collecting like terms:
+
+\[
+= \dfrac{1}{2} \left( |0\rangle \otimes (|\psi\rangle + \text{FlipSign}(|\psi\rangle))
++ |1\rangle \otimes (|\psi\rangle - \text{FlipSign}(|\psi\rangle)) \right)
+\]
+
+This is the result after applying the Hadamard to the first qubit in your equation. The outcome will
+depend on the nature of the \textit{FlipSign} operation applied to \(|\psi\rangle\).
+\end{airesult}
+
+\subsection{The case of matching key}
+
+\begin{ai}
+Great! Now consider that $FlipSign$ changes the sign of the state to the opposite: $|\psi\rangle
+\mapsto -|\psi\rangle$.
+\end{ai}
+
+\begin{airesult}
+If the \textit{FlipSign} operation changes the sign of the state, i.e.,
+
+\[
+\text{FlipSign}(|\psi\rangle) \mapsto -|\psi\rangle
+\]
+
+we can substitute this into our expression that we derived:
+
+\vsp
+
+The modified expression becomes:
+
+\[
+= \dfrac{1}{2} \left( |0\rangle \otimes (|\psi\rangle + (-|\psi\rangle))
++ |1\rangle \otimes (|\psi\rangle - (-|\psi\rangle)) \right)
+\]
+
+Simplifying each term:
+
+- The first term simplifies to:
+
+\[
+|0\rangle \otimes (|\psi\rangle - |\psi\rangle) = |0\rangle \otimes 0
+\]
+
+- The second term simplifies to:
+
+\[
+|1\rangle \otimes (|\psi\rangle + |\psi\rangle) = |1\rangle \otimes 2|\psi\rangle
+\]
+
+The entire expression becomes:
+
+\[
+= \dfrac{1}{2} \left( |0\rangle \otimes 0 + |1\rangle \otimes 2|\psi\rangle \right)
+\]
+
+\[
+= |1\rangle \otimes |\psi\rangle
+\]
+
+\vsp
+
+Thus, after applying the Hadamard to the first qubit and considering the \textit{FlipSign}
+operation, the final state is \(|1\rangle \otimes |\psi\rangle\). This indicates that the effect of
+the \textit{FlipSign} operation is crucial in determining the final measured state.
+\end{airesult}
+
+
+
+\subsection{The case of mismatching key}
+
+\begin{ai}
+Great! Now lets take a step back and consider that $FlipSign$ just returns the original state.
+\end{ai}
+
+\begin{airesult}
+If the \textit{FlipSign} operation does not alter the state, meaning:
+
+\[
+\text{FlipSign}(|\psi\rangle) \mapsto |\psi\rangle
+\]
+
+we can substitute this into our previously derived expression:
+
+\vsp
+
+The original expression becomes:
+
+\[
+= \dfrac{1}{2} \left( |0\rangle \otimes (|\psi\rangle + |\psi\rangle)
++ |1\rangle \otimes (|\psi\rangle - |\psi\rangle) \right)
+\]
+
+Simplifying each term:
+
+- The first term simplifies to:
+
+\[
+|0\rangle \otimes (|\psi\rangle + |\psi\rangle) = |0\rangle \otimes 2|\psi\rangle
+\]
+
+- The second term simplifies to:
+
+\[
+|1\rangle \otimes (|\psi\rangle - |\psi\rangle) = |1\rangle \otimes 0
+\]
+
+The entire expression becomes:
+
+\[
+= \dfrac{1}{2} \left( |0\rangle \otimes 2|\psi\rangle + |1\rangle \otimes 0 \right)
+\]
+
+\[
+= |0\rangle \otimes |\psi\rangle
+\]
+
+\vsp
+
+Thus, when \textit{FlipSign} returns the original state, the final state after applying the Hadamard
+to the first qubit is \(|0\rangle \otimes |\psi\rangle\). This demonstrates how the absence of sign
+change affects the resulting quantum state.
+\end{airesult}
+

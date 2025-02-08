@@ -141,3 +141,9 @@ breaklines=true
 \newcommand{\st}[1]{\sout{#1}}
 \renewcommand{\t}[1]{\texttt{#1}}
 
+% Url replacement for href
+% https://tex.stackexchange.com/a/35314/232633
+\makeatletter
+\renewcommand*{\u}{\begingroup\@makeother\%\@myhref}
+\newcommand*{\@myhref}[2]{\href{#2}{#1}\endgroup}
+\makeatother

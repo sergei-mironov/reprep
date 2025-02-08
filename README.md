@@ -26,5 +26,6 @@ done
 C3-inheritance [[TEX](./tex/C3-inheritance.tex)] [[PDF](./tex/C3-inheritance.pdf)] |
 brothers-on-bridge [[TEX](./tex/brothers-on-bridge.tex)] [[PDF](./tex/brothers-on-bridge.pdf)] |
 chernoff-bound-vs-qthreshhold [[TEX](./tex/chernoff-bound-vs-qthreshhold.tex)]
-[[PDF](./tex/chernoff-bound-vs-qthreshhold.pdf)]
+[[PDF](./tex/chernoff-bound-vs-qthreshhold.pdf)] | pennylane-quantum-lock
+[[TEX](./tex/pennylane-quantum-lock.tex)] [[PDF](./tex/pennylane-quantum-lock.pdf)]
 <!--noresult-->
