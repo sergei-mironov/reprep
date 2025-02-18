@@ -26,6 +26,9 @@ done
 C3-inheritance [[TEX](./tex/C3-inheritance.tex)] [[PDF](./tex/C3-inheritance.pdf)] |
 brothers-on-bridge [[TEX](./tex/brothers-on-bridge.tex)] [[PDF](./tex/brothers-on-bridge.pdf)] |
 chernoff-bound-vs-qthreshhold [[TEX](./tex/chernoff-bound-vs-qthreshhold.tex)]
-[[PDF](./tex/chernoff-bound-vs-qthreshhold.pdf)] | pennylane-quantum-lock
-[[TEX](./tex/pennylane-quantum-lock.tex)] [[PDF](./tex/pennylane-quantum-lock.pdf)]
+[[PDF](./tex/chernoff-bound-vs-qthreshhold.pdf)] | maxwell-sim [[TEX](./tex/maxwell-sim.tex)]
+[[PDF](./tex/maxwell-sim.pdf)] | mechanical-bloch [[TEX](./tex/mechanical-bloch.tex)]
+[[PDF](./tex/mechanical-bloch.pdf)] | pennylane-quantum-lock
+[[TEX](./tex/pennylane-quantum-lock.tex)] [[PDF](./tex/pennylane-quantum-lock.pdf)] | stern-gerlach
+[[TEX](./tex/stern-gerlach.tex)] [[PDF](./tex/stern-gerlach.pdf)]
 <!--noresult-->
