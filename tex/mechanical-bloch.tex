@@ -64,15 +64,26 @@ y0 = [x1_0, v1_0, x2_0, v2_0]
 # Solve the system of ODEs
 solution = solve_ivp(coupled_oscillators, t_span, y0, t_eval=t_eval)
 
-# Plot the results
-plt.figure(figsize=(10, 4))
+# Plot the results on separate subplots
+plt.figure(figsize=(10, 8))
+
+# Plot for x1
+plt.subplot(211)
 plt.plot(solution.t, solution.y[0], label=r'$x_1$', color='b')
+plt.ylabel('Displacement (m)')
+plt.title('Coupled Oscillator Simulation')
+plt.legend(loc='upper right')
+plt.grid(True)
+
+# Plot for x2
+plt.subplot(212, sharex=plt.gca())
 plt.plot(solution.t, solution.y[2], label=r'$x_2$', color='r')
 plt.xlabel('Time (s)')
 plt.ylabel('Displacement (m)')
-plt.title('Coupled Oscillator Simulation')
-plt.legend()
+plt.legend(loc='upper right')
 plt.grid(True)
+
+plt.tight_layout()
 plt.savefig("img/mechanical-bloch-f1.png")
 \end{python}
 
@@ -104,8 +115,8 @@ I have the following formulas describing a coupled oscillator:
 \end{aligned}
 \]
 
-Please generate me a code in Python which would simulate these formulas, given $m=0.1 kg$, $l=0.15
-m$, $k = 0.5 N/m$, At $t=0$, let both $x_1 = 1 cm$ and $x_2 = 1 cm$.
+Please generate me a code in Python which would simulate these formulas, given $m=0.1$ kg, $l=0.15
+$ m, $k = 0.5$ N/m, At $t=0$, let both $x_1 = 1$ cm and $x_2 = 1$ cm.
 
 \end{ai}
 
@@ -151,15 +162,26 @@ y0 = [x1_0, v1_0, x2_0, v2_0]
 # Solve the system of ODEs
 solution = solve_ivp(coupled_oscillators, t_span, y0, t_eval=t_eval)
 
-# Plot the results
-plt.figure(figsize=(10, 4))
+# Plot the results on separate subplots
+plt.figure(figsize=(10, 8))
+
+# Plot for x1
+plt.subplot(211)
 plt.plot(solution.t, solution.y[0], label=r'$x_1$', color='b')
+plt.ylabel('Displacement (m)')
+plt.title('Coupled Oscillator Simulation')
+plt.legend(loc='upper right')
+plt.grid(True)
+
+# Plot for x2
+plt.subplot(212, sharex=plt.gca())
 plt.plot(solution.t, solution.y[2], label=r'$x_2$', color='r')
 plt.xlabel('Time (s)')
 plt.ylabel('Displacement (m)')
-plt.title('Coupled Oscillator Simulation')
-plt.legend()
+plt.legend(loc='upper right')
 plt.grid(True)
+
+plt.tight_layout()
 plt.show()
 \end{python}
 
