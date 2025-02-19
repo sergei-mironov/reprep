@@ -1,6 +1,57 @@
 
 \section{Chapter 1}
 
+Base formulas:
+
+\[
+\begin{aligned}
+  \frac{\partial E}{\partial t} &= \frac{1}{\epsilon_0} \nabla \times H, \\
+  \frac{\partial H}{\partial t} &= -\frac{1}{\mu_0} \nabla \times E.
+\end{aligned}
+\]
+
+
+Note: $\nabla$ in Cartesian coordinates:
+\[
+\nabla \times \mathbf{F} = \left( \frac{\partial F_z}{\partial y} - \frac{\partial F_y}{\partial
+z} \right) \mathbf{i}
++ \left( \frac{\partial F_x}{\partial z} - \frac{\partial F_z}{\partial x} \right) \mathbf{j}
++ \left( \frac{\partial F_y}{\partial x} - \frac{\partial F_x}{\partial y} \right) \mathbf{k}
+\]
+where \(\mathbf{F}\) is a vector field, and \(\mathbf{i}, \mathbf{j}, \mathbf{k}\) are unit
+vectors in the \(x\), \(y\), and \(z\) directions, respectively.
+
+\vsp
+
+Below are the equations of a plane wave traveling in the $z$ direction with the
+electric field oriented in the $x$ direction and the magnetic field oriented in the
+$y$ direction
+
+\[
+\begin{aligned}
+\frac{\partial E_x}{\partial t} &= -\frac{1}{\epsilon_0} \frac{\partial H_y}{\partial z}, \\
+\frac{\partial H_y}{\partial t} &= -\frac{1}{\mu_0} \frac{\partial E_x}{\partial z}.
+\end{aligned}
+\]
+
+After the central difference approximation:
+
+\[
+\begin{aligned}
+\frac{E_x^{n + 1/2}(k) - E_x^{n - 1/2}(k)}{\Delta t} &= -\frac{1}{\epsilon_0} \frac{H_y^n(k + 1/2) - H_y^n(k - 1/2)}{\Delta x}, \\
+\frac{H_y^{n + 1}(k + 1/2) - H_y^n(k + 1/2)}{\Delta t} &= -\frac{1}{\mu_0} \frac{E_x^{n + 1/2}(k + 1) - E_x^{n + 1/2}(k)}{\Delta x}.
+\end{aligned}
+\]
+
+Note: a comment from \cite{houle2019fdtd}: It might seem more sensible to use $\Delta{z}$ as the
+incremental step because in this case we are going in the $z$ direction. However, $\Delta{x}$ is so
+commonly used for a spatial increment that we will use $\Delta{x}$.
+
+The formulation of the above equations assume that the $E$ and $H$ fields are interleaved in both
+space and time. $H$ uses the arguments $k + 1/2$ and $k - 1/2$ to indicate that the $H$ field values
+are assumed to be located between the $E$ field values. Similarly, the $n + 1/2$ or $n - 1/2$
+superscript indicates that it occurs slightly after or before $n$, respectively.
+
 \begin{python}
 import numpy as np
 from math import exp
@@ -61,3 +112,102 @@ plt.savefig('img/maxwell-sim-1.png')
 \begin{center}
 \includegraphics[width=0.8\linewidth]{img/maxwell-sim-1.png}
 \end{center}
+
+
+
+\section{Discussion}
+
+
+\begin{ai}
+
+Hi model. Please, describe the below Maxwell's equations. What is $H$, what is $E$. Please define
+the $\nabla$ operator.
+
+\[
+\begin{aligned}
+  \frac{\partial E}{\partial t} &= \frac{1}{\epsilon_0} \nabla \times H, \\
+  \frac{\partial H}{\partial t} &= -\frac{1}{\mu_0} \nabla \times E.
+\end{aligned}
+\]
+
+\end{ai}
+
+\begin{airesult}
+Hi! Let's explore the Maxwell's equations you've provided, which describe the fundamental behavior
+of electric and magnetic fields.
+
+\vsp
+
+The equations are:
+
+\[
+\begin{aligned}
+  \frac{\partial E}{\partial t} &= \frac{1}{\epsilon_0} \nabla \times H, \\
+  \frac{\partial H}{\partial t} &= -\frac{1}{\mu_0} \nabla \times E.
+\end{aligned}
+\]
+
+\vsp
+
+Here's a breakdown of the components involved:
+
+\begin{itemize}
+\item \textbf{E (Electric Field):}
+
+  \begin{itemize}
+  \item Denoted by \( E \), it represents the electric field vector, a fundamental field that
+describes the force experienced by a charged particle in space.
+  \item It is measured in volts per meter (V/m) and describes the magnitude and direction of the
+electric force per unit charge.
+  \end{itemize}
+
+\item \textbf{H (Magnetic Field Intensity):}
+
+  \begin{itemize}
+  \item Denoted by \( H \), it represents the magnetic field intensity vector. It's related to the
+magnetic field \( B \) through the material's magnetic properties.
+  \item It is measured in amperes per meter (A/m) and is often used in disciplines involving
+magnetized materials.
+  \end{itemize}
+
+\item \textbf{The \(\nabla\) Operator (Nabla or Del):}
+
+  \begin{itemize}
+  \item The \(\nabla\) symbol is a vector differential operator known as the del or nabla operator.
+  \item When applied to a vector field (like \( H \) or \( E \)) in the form \(\nabla \times\), it
+represents the curl of the field.
+  \item The curl of a vector field gives a measure of the field's tendency to circulate around a
+point, effectively capturing the rotation or swirling of the field.
+
+  \item For example, in Cartesian coordinates:
+  \[
+  \nabla \times \mathbf{F} = \left( \frac{\partial F_z}{\partial y} - \frac{\partial F_y}{\partial
+z} \right) \mathbf{i}
+  + \left( \frac{\partial F_x}{\partial z} - \frac{\partial F_z}{\partial x} \right) \mathbf{j}
+  + \left( \frac{\partial F_y}{\partial x} - \frac{\partial F_x}{\partial y} \right) \mathbf{k}
+  \]
+  where \(\mathbf{F}\) is a vector field, and \(\mathbf{i}, \mathbf{j}, \mathbf{k}\) are unit
+vectors in the \(x\), \(y\), and \(z\) directions, respectively.
+  \end{itemize}
+
+\item \textbf{Constants:}
+
+  \begin{itemize}
+  \item \(\epsilon_0\) is the permittivity of free space, a measure of how an electric field affects
+and is affected by a medium. Its approximate value is \(8.854 \times 10^{-12} \ \text{F/m}\) (farads
+per meter).
+  \item \(\mu_0\) is the permeability of free space, indicating the ability of a medium to support
+the formation of a magnetic field. Its value is approximately \(4\pi \times 10^{-7} \ \text{H/m}\)
+(henrys per meter).
+  \end{itemize}
+
+\end{itemize}
+
+\vsp
+
+These equations describe the dynamics of electromagnetic fields in space, with the curl operations
+indicating how changes in one type of field (electric or magnetic) can generate or be related to
+changes in the other field over time. This intertwined behavior of \(E\) and \(H\) is critical in
+explaining electromagnetic wave propagation, transmission lines, and antennas, among other
+phenomena.
+\end{airesult}

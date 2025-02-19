@@ -1,3 +1,3 @@
 title: Maxwell equation simulations.
 abstract: |
-  Simulating Maxwell equations numerically
+  Simulating Maxwell equations numerically, following \tcite{houle2019fdtd}.
