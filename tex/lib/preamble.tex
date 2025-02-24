@@ -39,6 +39,11 @@ columns=flexible,
 breaklines=true
 }
 \usepackage{tikz}
+\usepackage{lastpage}
+\usepackage{datetime}
+% Set the date format to DD.MM.YYYY
+\renewcommand{\dateseparator}{.}
+\newdateformat{localdate}{\twodigit{\THEDAY}.\twodigit{\THEMONTH}.\THEYEAR}
 
 \setlength{\parindent}{0pt}
 

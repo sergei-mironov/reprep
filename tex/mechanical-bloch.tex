@@ -90,17 +90,25 @@ def coupled_oscillators(name, x1_0 = 0.01, x2_0 = 0.01, v1_0 = 0.0, v2_0 = 0.0):
 
 coupled_oscillators("1", 0.01, 0.01)
 coupled_oscillators("2", 0.01, -0.01)
+coupled_oscillators("3", 0.01, 0)
 \end{python}
 
+\begin{comment}
 \begin{result}
 \end{result}
+\end{comment}
 
-\begin{center}
-\includegraphics[width=0.8\linewidth]{img/mechanical-bloch-f1-1.png}
-\end{center}
-\begin{center}
-\includegraphics[width=0.8\linewidth]{img/mechanical-bloch-f1-2.png}
-\end{center}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.4\linewidth]{img/mechanical-bloch-f1-1.png}
+  \includegraphics[width=0.4\linewidth]{img/mechanical-bloch-f1-2.png}
+  \includegraphics[width=0.4\linewidth]{img/mechanical-bloch-f1-3.png}
+  \caption{(1) Pendulum normal mode (2) Breathing normal mode. The amplitudes are the same but we
+  need more potential energy to run this mode to draw the spring. (3) Energy transmission from one
+  oscillator to another via the connecting spring.}
+  \label{fig:mechanical-bloch}
+\end{figure}
+
 
 \subsection{Discussion}
 
