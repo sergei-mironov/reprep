@@ -36,12 +36,8 @@
         ]);
 
         shellHook = ''
-          # Custom shell prompt
-          export PS1="\[\033[01;34m\]technotes \\w \[\033[00m\]$ "
-          export PROJECT_ROOT=`pwd`
-          export PATH=$PROJECT_ROOT/sh:$PATH
-
-          echo "Development environment with SciPy, extensive LaTeX, and custom shell prompt is ready!"
+          . ./env.sh
+          echo "Sourced ./env.sh"
         '';
       };
     };
