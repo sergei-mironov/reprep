@@ -1,4 +1,3 @@
-
 import pennylane as qml
 import numpy as np
 import matplotlib.pyplot as plt
@@ -8,9 +7,17 @@ from numpy import ndarray
 from scipy.integrate import solve_ivp
 import matplotlib.pyplot as plt
 from dataclasses import dataclass
+from math import sqrt, cos
 
 @dataclass
-class Solution:
+class PendulumProblem:
+  m:float=0.1
+  l:float=0.15
+  k:float=0.5
+  g:float=9.81
+
+@dataclass
+class Simulation:
   t:ndarray
   x1:ndarray
   v1:ndarray
@@ -18,23 +25,22 @@ class Solution:
   v2:ndarray
 
 
-# Constants
-m = 0.1  # mass in kg
-l = 0.15  # length in m
-k = 0.5  # spring constant in N/m
-g = 9.81  # acceleration due to gravity in m/s^2
+def coupled_pendulums(p:PendulumProblem, x10=0.01, x20=0.01, v10=0.0, v20=0.0) -> Simulation:
+  """ Coupled pendulums without detuning. As described in "Waves and Oscillations. Prelude to
+  Quantum Mechanincs".
 
-# Initial conditions
-def coupled_oscillators(x1_0 = 0.01, x2_0 = 0.01, v1_0 = 0.0, v2_0 = 0.0):
-  '''
-  x1_0 = 0.01  # initial position of x1 in m
-  x2_0 = 0.01  # initial position of x2 in m
-  v1_0 = 0.0  # initial velocity of x1
-  v2_0 = 0.0  # initial velocity of x2
-  '''
+  Arguments:
+  - `x10`: initial position of x1 in m
+  - `x20`: initial position of x2 in m
+  - `v10`: initial velocity of x1
+  - `v20`: initial velocity of x2
+  """
+
+  # Constants
+  m, l, k, g = list(p.__dict__.values())
 
   # System of equations
-  def _ode(t, y) -> Solution:
+  def _ode(t, y):
     x1, v1, x2, v2 = y
     dx1dt = v1
     dv1dt = -(g / l) * x1 - (k / m) * (x1 - x2)
@@ -47,13 +53,100 @@ def coupled_oscillators(x1_0 = 0.01, x2_0 = 0.01, v1_0 = 0.0, v2_0 = 0.0):
   t_eval = np.linspace(t_span[0], t_span[1], 1000)  # time points to evaluate at
 
   # Initial state vector
-  y0 = [x1_0, v1_0, x2_0, v2_0]
+  y0 = [x10, v10, x20, v20]
 
   # Solve the system of ODEs
   solution = solve_ivp(_ode, t_span, y0, t_eval=t_eval)
-  return Solution(solution.t, *[np.array(x) for x in solution.y])
+  return Simulation(solution.t, *[np.array(x) for x in solution.y])
 
-def splot(name:str, sol:Solution)->None:
+
+@dataclass
+class OscProblem:
+  m: float = 0.1   # mass in kg
+  k: float = 5     # constant for main oscillating springs
+  K: float = 0.5   # constant for spring connecting two oscillators
+  A: float = 0.09     # FIXME: select appropriate
+  wdrive: float|None = None # = 0.3 # FIXME: check comparable
+  # Calculated
+  sigma02:float|None = None
+  sigmac2:float|None = None
+  dsigma:float|None = None
+  delta:float|None = None
+  sigmaR:float|None = None
+
+  def __post_init__(self):
+    # print(f"OscProblem initialized with m={self.m}, k={self.k}, K={self.K}")
+    self.sigma02 = (self.k + self.K) / self.m
+    self.sigmac2 = self.K / self.m
+    self.dsigma = self.sigmac2 / sqrt(self.sigma02)
+    self.wdrive = self.dsigma
+    self.delta = self.dsigma - self.wdrive
+    self.sigmaR = sqrt(self.A**2 + self.delta**2)
+
+
+def coupled_oscillators(p:OscProblem, xa0=0.01, xb0=0.01, va0=0.0, vb0=0.0)->Simulation:# {{{
+  """ Coupled oscillators with periodic detuning, as described in the paper "The Classical Bloch
+  Equations".
+  """
+  # Constants
+  m, k, K, *_ = list(p.__dict__.values())
+
+  nt = 1000 # number of time points to evaluate at
+
+  # System of equations
+  def _ode(t, state):
+    xa, va, xb, vb = state
+    dxadt = va
+    dxbdt = vb
+    dvadt = - xa * ((k + K) / m) + xb * (K / m)
+    dvbdt = - xb * ((k + K) / m) + xa * (K / m)
+    return [dxadt, dvadt, dxbdt, dvbdt]
+
+  # Time span for the simulation
+  t_span = (0, 10)  # simulate from t=0 to t=10 seconds
+  t_eval = np.linspace(t_span[0], t_span[1], nt)
+
+  # Initial state vector
+  state0 = [xa0, va0, xb0, vb0]
+
+  # Solve the system of ODEs
+  solution = solve_ivp(_ode, t_span, state0, t_eval=t_eval)
+  return Simulation(solution.t, *[np.array(x) for x in solution.y])
+# }}}
+
+def coupled_detuned_oscillators(p:OscProblem, xa0=0.01, xb0=0.01, va0=0.0, vb0=0.0)->Simulation:
+  """ Coupled oscillators with periodic detuning, as described in the paper "The Classical Bloch
+  Equations".
+  """
+  # Constants
+  m, k, K, *_ = list(p.__dict__.values())
+  sigma02, A, wdrive = p.sigma02, p.A, p.wdrive
+  sigma0 = sqrt(sigma02)
+
+  # System of equations
+  def _ode(t, state):
+    xa, va, xb, vb = state
+    dk = -2.0 * sigma0 * m * A * cos(wdrive * t)
+    dxadt = va
+    dxbdt = vb
+    dvadt = - xa * ((k + K) / m - dk / m) + xb * (K / m)
+    dvbdt = - xb * ((k + K) / m + dk / m) + xa * (K / m)
+    return [dxadt, dvadt, dxbdt, dvbdt]
+
+  nt = 1000 # number of time points to evaluate at
+  # Time span for the simulation
+  t_span = (0, 90)  # simulate from t=0 to t=10 seconds
+  t_eval = np.linspace(t_span[0], t_span[1], nt)
+
+  # Initial state vector
+  state0 = [xa0, va0, xb0, vb0]
+
+  # Solve the system of ODEs
+  solution = solve_ivp(_ode, t_span, state0, t_eval=t_eval)
+  return Simulation(solution.t, *[np.array(x) for x in solution.y])
+
+
+def splot(name:str|None, sol:Simulation)->None:# {{{
   # Plot the results on separate subplots
   plt.figure(figsize=(10, 8))
 
@@ -74,7 +167,38 @@ def splot(name:str, sol:Solution)->None:
   plt.grid(True)
 
   plt.tight_layout()
-  plt.savefig(f"img/mechanical-bloch-f1-{name}.png")
+  if name is None:
+    plt.show()
+  else:
+    plt.savefig(f"img/mechanical-bloch-f1-{name}.png")
+# }}}
+
+def splotn(name:str|None, sol:Simulation)->None:
+  # Plot the results on separate subplots
+  plt.close()
+  plt.figure(figsize=(10, 8))
+
+  # Plot for x1
+  plt.subplot(211)
+  plt.plot(sol.t, sol.x1 + sol.x2, label=r'$x_+$', color='b')
+  plt.ylabel('x+ (m)')
+  plt.title('Coupled Oscillator Simulation')
+  plt.legend(loc='upper right')
+  plt.grid(True)
+
+  # Plot for x2
+  plt.subplot(212, sharex=plt.gca())
+  plt.plot(sol.t, sol.x1 - sol.x2, label=r'$x_-$', color='r')
+  plt.xlabel('Time (s)')
+  plt.ylabel('x- (m)')
+  plt.legend(loc='upper right')
+  plt.grid(True)
+
+  plt.tight_layout()
+  if name is None:
+    plt.show()
+  else:
+    plt.savefig(f"img/mechanical-bloch-f1-{name}.png")
 
 # coupled_oscillators("1", 0.01, 0.01)
 # coupled_oscillators("2", 0.01, -0.01)
