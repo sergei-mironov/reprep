@@ -62,7 +62,7 @@ def coupled_pendulums(p:PendulumProblem, x10=0.01, x20=0.01, v10=0.0, v20=0.0) -
 
 @dataclass
 class OscProblem:
-  m: float = 0.1   # mass in kg
+  m: float = 0.9   # mass in kg
   k: float = 5     # constant for main oscillating springs
   K: float = 0.5   # constant for spring connecting two oscillators
   A: float = 0.09     # FIXME: select appropriate
