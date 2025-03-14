@@ -1,7 +1,25 @@
-This repository contains technical surveys on various topics. The notes are formatted as literate
-Latex documents and evaluated with the [Litrepl](https://github.com/sergei-mironov/litrepl) tool.
-The assistant LLM model employed in these writings was accessed via the
-[aicli](https://github.com/sergei-mironov/aicli) interpreter.
+RepRep
+------
+
+**RepRep** stands for **Reproducible Reports**. In this repository, we are experimenting with
+creating reproducible documents on various technical topics, usually involving computations.
+
+When we refer to a document as reproducible, we imply the following:
+- The document contains source files enabling anyone to reconstruct the presentation.
+- These sources are authenticated through a cryptographic signature.
+- The sources specify build requirements in a universally unique manner.
+
+
+In this project, we adhere to these principles by: (1) embedding the signed source archive in every
+document we create; (2) incorporating [Nix flake](https://wiki.nixos.org/wiki/Flakes) environment
+definitions and build instructions within these archives; (3) utilizing
+[Litrepl](https://github.com/sergei-mironov/litrepl) to run computations and verify the results.
+
+For documents that incorporate AI assistant dialogues, we employ Litrepl alongside the
+[aicli](https://github.com/sergei-mironov/aicli) interpreter as our means of communication.
+
+Documents
+---------
 
 <!--
 ``` sh
