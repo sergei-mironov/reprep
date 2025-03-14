@@ -14,6 +14,175 @@ import matplotlib.pyplot as plt
 
 \newpage
 
+\section{Following the paper}
+
+\tcite{Frimmer_2014}.
+
+\begin{center}
+  \includegraphics[width=0.6\textwidth]{img/osc.png}
+\end{center}
+
+The main motion equations are:
+
+\[
+  m \frac{d^2x_A}{dt^2} + m \gamma \frac{dx_A}{dt} + \left(k + \kappa - \Delta
+k(t)\right)x_A
+  - \kappa x_B = F(t)
+\]
+\[
+  m \frac{d^2x_B}{dt^2} + m \gamma \frac{dx_B}{dt} + \left(k + \kappa + \Delta
+k(t)\right)x_B
+  - \kappa x_A = 0
+\]
+
+Dividing by $m$.
+
+\[
+  \frac{d^2x_A}{dt^2} + \gamma \frac{dx_A}{dt} + \left(\frac{k + \kappa}{m} - \frac{\Delta
+    k(t)}{m}\right)x_A -\frac{\kappa}{m}x_B = \frac{1}{m}F(t)
+\]
+\[
+  \frac{d^2x_B}{dt^2} + \gamma \frac{dx_B}{dt} + \left(\frac{k + \kappa}{m} + \frac{\Delta
+    k(t)}{m}\right)x_B -\frac{\kappa}{m}x_A = 0
+\]
+
+Introducing $\Omega$ frequencies:
+
+\[
+  \Omega_0^2 = [k + \kappa]/m
+\]
+
+\[
+  \Omega_d^2 = \Delta k / m
+\]
+
+\[
+  \Omega_c^2 = \kappa / m
+\]
+
+becomes
+
+\[
+\begin{pmatrix}
+  \frac{d^2}{dt^2} + \gamma \frac{d}{dt} + \Omega_0^2
+\end{pmatrix}
+\begin{pmatrix}
+ x_A \\
+ x_B
+\end{pmatrix}
++
+\begin{pmatrix}
+  -\Omega_d^2 & -\Omega_c^2 \\ -\Omega_c^2 & \Omega_d^2
+\end{pmatrix}
+\begin{pmatrix}
+ x_A \\
+ x_B
+\end{pmatrix}
+=
+\begin{pmatrix}
+ F(t) \\
+ 0
+\end{pmatrix}
+\]
+
+
+\begin{ai}
+Please rewrite the below two equation into the matrix form. I'd like to be like
+
+\vsp
+
+\verb|(...)(x_A ; x_B) + (...) (x_A; x_B) = (f(t) ; 0)|.
+
+\[
+  \frac{d^2x_A}{dt^2} + \gamma \frac{dx_A}{dt} + \left(\frac{k + \kappa}{m} - \frac{\Delta
+    k(t)}{m}\right)x_A -\frac{k}{m}x_B = \frac{1}{m}F(t)
+\]
+\[
+  \frac{d^2x_B}{dt^2} + \gamma \frac{dx_B}{dt} + \left(\frac{k + \kappa}{m} + \frac{\Delta
+    k(t)}{m}\right)x_B -\frac{k}{m}x_A = 0
+\]
+
+Introducing $\Omega$ frequencies:
+
+\[
+  \Omega_0^2 = [k + \kappa]/m
+\]
+
+\[
+  \Omega_d^2 = \Delta k / m
+\]
+
+\[
+  \Omega_c^2 = \kappa / m
+\]
+
+
+\end{ai}
+
+\begin{airesult}
+To rewrite the given equations in matrix form, we'll utilize the newly introduced frequencies
+\(\Omega_0\), \(\Omega_d\), and \(\Omega_c\). We then represent the system using matrix operations
+on a vector composed of \(x_A\) and \(x_B\).
+
+The two equations provided are:
+
+\vsp
+
+\[
+\frac{d^2x_A}{dt^2} + \gamma\frac{dx_A}{dt} + \left( \frac{k + \kappa}{m} - \frac{\Delta k(t)}{m}
+\right)x_A
+- \frac{k}{m}x_B = \frac{1}{m}F(t)
+\]
+
+\[
+\frac{d^2x_B}{dt^2} + \gamma\frac{dx_B}{dt} + \left( \frac{k + \kappa}{m} + \frac{\Delta k(t)}{m}
+\right)x_B
+- \frac{k}{m}x_A = 0
+\]
+
+\vsp
+
+Using the new frequency parameters, the equations become:
+
+\vsp
+
+\[
+\frac{d^2x_A}{dt^2} + \gamma\frac{dx_A}{dt} + \left( \Omega_0^2 - \Omega_d^2 \right)x_A
+- \frac{k}{m}x_B = \frac{1}{m}F(t)
+\]
+
+\[
+\frac{d^2x_B}{dt^2} + \gamma\frac{dx_B}{dt} + \left( \Omega_0^2 + \Omega_d^2 \right)x_B
+- \frac{k}{m}x_A = 0
+\]
+
+\vsp
+
+To express these in a matrix form:
+
+\[
+\begin{pmatrix}
+ \frac{d^2}{dt^2} + \gamma \frac{d}{dt} + (\Omega_0^2 - \Omega_d^2) & -\frac{k}{m} \\
+ -\frac{k}{m} & \frac{d^2}{dt^2} + \gamma \frac{d}{dt} + (\Omega_0^2 + \Omega_d^2)
+\end{pmatrix}
+\begin{pmatrix}
+ x_A \\
+ x_B
+\end{pmatrix}
+=
+\begin{pmatrix}
+ \frac{1}{m}F(t) \\
+ 0
+\end{pmatrix}
+\]
+
+\vsp
+
+This representation condenses the system of differential equations into a single matrix equation,
+allowing easier manipulation and understanding of the coupled dynamics.
+\end{airesult}
+
+
 \section{Following the book}
 \tcite{smith2010waves}.
 
@@ -464,168 +633,3 @@ In summary, ODEs play a crucial role in modeling a wide array of real-world phen
 independent variable influences the behavior of another variable, such as time-dependent processes
 in physics, engineering, and beyond.
 \end{airesult}
-
-\section{Following the paper}
-
-\tcite{Frimmer_2014}.
-
-The main motion equations are:
-
-\[
-  m \frac{d^2x_A}{dt^2} + m \gamma \frac{dx_A}{dt} + \left(k + \kappa - \Delta
-k(t)\right)x_A
-  - \kappa x_B = F(t)
-\]
-\[
-  m \frac{d^2x_B}{dt^2} + m \gamma \frac{dx_B}{dt} + \left(k + \kappa + \Delta
-k(t)\right)x_B
-  - \kappa x_A = 0
-\]
-
-Dividing by $m$.
-
-\[
-  \frac{d^2x_A}{dt^2} + \gamma \frac{dx_A}{dt} + \left(\frac{k + \kappa}{m} - \frac{\Delta
-    k(t)}{m}\right)x_A -\frac{\kappa}{m}x_B = \frac{1}{m}F(t)
-\]
-\[
-  \frac{d^2x_B}{dt^2} + \gamma \frac{dx_B}{dt} + \left(\frac{k + \kappa}{m} + \frac{\Delta
-    k(t)}{m}\right)x_B -\frac{\kappa}{m}x_A = 0
-\]
-
-Introducing $\Omega$ frequencies:
-
-\[
-  \Omega_0^2 = [k + \kappa]/m
-\]
-
-\[
-  \Omega_d^2 = \Delta k / m
-\]
-
-\[
-  \Omega_c^2 = \kappa / m
-\]
-
-becomes
-
-\[
-\begin{pmatrix}
-  \frac{d^2}{dt^2} + \gamma \frac{d}{dt} + \Omega_0^2
-\end{pmatrix}
-\begin{pmatrix}
- x_A \\
- x_B
-\end{pmatrix}
-+
-\begin{pmatrix}
-  -\Omega_d^2 & -\Omega_c^2 \\ -\Omega_c^2 & \Omega_d^2
-\end{pmatrix}
-\begin{pmatrix}
- x_A \\
- x_B
-\end{pmatrix}
-=
-\begin{pmatrix}
- F(t) \\
- 0
-\end{pmatrix}
-\]
-
-
-\begin{ai}
-Please rewrite the below two equation into the matrix form. I'd like to be like
-
-\vsp
-
-\verb|(...)(x_A ; x_B) + (...) (x_A; x_B) = (f(t) ; 0)|.
-
-\[
-  \frac{d^2x_A}{dt^2} + \gamma \frac{dx_A}{dt} + \left(\frac{k + \kappa}{m} - \frac{\Delta
-    k(t)}{m}\right)x_A -\frac{k}{m}x_B = \frac{1}{m}F(t)
-\]
-\[
-  \frac{d^2x_B}{dt^2} + \gamma \frac{dx_B}{dt} + \left(\frac{k + \kappa}{m} + \frac{\Delta
-    k(t)}{m}\right)x_B -\frac{k}{m}x_A = 0
-\]
-
-Introducing $\Omega$ frequencies:
-
-\[
-  \Omega_0^2 = [k + \kappa]/m
-\]
-
-\[
-  \Omega_d^2 = \Delta k / m
-\]
-
-\[
-  \Omega_c^2 = \kappa / m
-\]
-
-
-\end{ai}
-
-\begin{airesult}
-To rewrite the given equations in matrix form, we'll utilize the newly introduced frequencies
-\(\Omega_0\), \(\Omega_d\), and \(\Omega_c\). We then represent the system using matrix operations
-on a vector composed of \(x_A\) and \(x_B\).
-
-The two equations provided are:
-
-\vsp
-
-\[
-\frac{d^2x_A}{dt^2} + \gamma\frac{dx_A}{dt} + \left( \frac{k + \kappa}{m} - \frac{\Delta k(t)}{m}
-\right)x_A
-- \frac{k}{m}x_B = \frac{1}{m}F(t)
-\]
-
-\[
-\frac{d^2x_B}{dt^2} + \gamma\frac{dx_B}{dt} + \left( \frac{k + \kappa}{m} + \frac{\Delta k(t)}{m}
-\right)x_B
-- \frac{k}{m}x_A = 0
-\]
-
-\vsp
-
-Using the new frequency parameters, the equations become:
-
-\vsp
-
-\[
-\frac{d^2x_A}{dt^2} + \gamma\frac{dx_A}{dt} + \left( \Omega_0^2 - \Omega_d^2 \right)x_A
-- \frac{k}{m}x_B = \frac{1}{m}F(t)
-\]
-
-\[
-\frac{d^2x_B}{dt^2} + \gamma\frac{dx_B}{dt} + \left( \Omega_0^2 + \Omega_d^2 \right)x_B
-- \frac{k}{m}x_A = 0
-\]
-
-\vsp
-
-To express these in a matrix form:
-
-\[
-\begin{pmatrix}
- \frac{d^2}{dt^2} + \gamma \frac{d}{dt} + (\Omega_0^2 - \Omega_d^2) & -\frac{k}{m} \\
- -\frac{k}{m} & \frac{d^2}{dt^2} + \gamma \frac{d}{dt} + (\Omega_0^2 + \Omega_d^2)
-\end{pmatrix}
-\begin{pmatrix}
- x_A \\
- x_B
-\end{pmatrix}
-=
-\begin{pmatrix}
- \frac{1}{m}F(t) \\
- 0
-\end{pmatrix}
-\]
-
-\vsp
-
-This representation condenses the system of differential equations into a single matrix equation,
-allowing easier manipulation and understanding of the coupled dynamics.
-\end{airesult}
-

@@ -40,13 +40,20 @@
 This document was compiled with reproducibility in mind, the source archive is attached and
 gpg-signed by !GPGNAME! \texttt{<!GPGEMAIL!>}.
 
-Sources: \attachfile{!SOURCEFILE!}
+% Here is a LaTeX code snippet for a table with 2 rows and 2 columns
+% where the cells of the second row are joined into one.
 
-Signature: \attachfile{!GPGSIGFILE!}
 
-Signature verbatim:
+\begin{center}
+\begin{tabular}{|C{5cm}|C{5cm}|}
+\hline
+Sources: \attachfile{!SOURCEFILE!} & Signature: \attachfile{!GPGSIGFILE!} \\ \hline
+\multicolumn{2}{|c|}{
+  \begin{minipage}{9.4cm}\vsp\verbatiminput{!GPGSIGFILE!}\vsp\end{minipage}
+} \\ \hline
+\end{tabular}
+\end{center}
 
-\verbatiminput{!GPGSIGFILE!}
 
 \printbibliography
 

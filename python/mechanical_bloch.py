@@ -116,14 +116,16 @@ def coupled_oscillators(p:OscProblem, xa0=0.01, xb0=0.01, va0=0.0, vb0=0.0)->Sim
 
 def coupled_detuned_oscillators(p:OscProblem, xa0=0.01, xb0=0.01, va0=0.0, vb0=0.0)->Simulation:
   """ Coupled oscillators with periodic detuning, as described in the paper "The Classical Bloch
-  Equations".
+  Equations". The function builds and sovles the system of ODEs corresponding to the problem.
   """
-  # Constants
   m, k, K, *_ = list(p.__dict__.values())
   sigma02, A, wdrive = p.sigma02, p.A, p.wdrive
   sigma0 = sqrt(sigma02)
+  nt = 1000
+  t_span = (0, 90)
+  t_eval = np.linspace(t_span[0], t_span[1], nt)
+  state0 = [xa0, va0, xb0, vb0]
 
-  # System of equations
   def _ode(t, state):
     xa, va, xb, vb = state
     dk = -2.0 * sigma0 * m * A * cos(wdrive * t)
@@ -133,15 +135,6 @@ def coupled_detuned_oscillators(p:OscProblem, xa0=0.01, xb0=0.01, va0=0.0, vb0=0
     dvbdt = - xb * ((k + K) / m + dk / m) + xa * (K / m)
     return [dxadt, dvadt, dxbdt, dvbdt]
 
-  nt = 1000 # number of time points to evaluate at
-  # Time span for the simulation
-  t_span = (0, 90)  # simulate from t=0 to t=10 seconds
-  t_eval = np.linspace(t_span[0], t_span[1], nt)
-
-  # Initial state vector
-  state0 = [xa0, va0, xb0, vb0]
-
-  # Solve the system of ODEs
   solution = solve_ivp(_ode, t_span, state0, t_eval=t_eval)
   return Simulation(solution.t, *[np.array(x) for x in solution.y])
 
