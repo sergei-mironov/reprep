@@ -12,8 +12,9 @@ When we refer to a document as reproducible, we imply the following:
 
 In this project, we adhere to these principles by: (1) embedding the signed source archive in every
 document we create; (2) incorporating [Nix flake](https://wiki.nixos.org/wiki/Flakes) environment
-definitions and build instructions within these archives; (3) utilizing
-[Litrepl](https://github.com/sergei-mironov/litrepl) to run computations and verify the results.
+definitions and build instructions within these archives; (3) Leveraging
+[Litrepl](https://github.com/sergei-mironov/litrepl) to execute computations and directly validate
+results within the document source files.
 
 For documents that incorporate AI assistant dialogues, we employ Litrepl alongside the
 [aicli](https://github.com/sergei-mironov/aicli) interpreter as our means of communication.
