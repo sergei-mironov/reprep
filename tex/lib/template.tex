@@ -2,16 +2,20 @@
 
 \input{lib/preamble.tex}
 
+\usepackage{alltt}
+\usepackage{attachfile}
+% \CatchFileDef{\gpgsigdata}{!GPGSIG!}{}
+
 \title{!TITLE!}
 \author{Sergei Mironov}
 
 \begin{document}
 
 \begin{center}
-\begin{tabular}{L{2cm} R{4cm} | L{2cm} R{4cm}}
-\textbf{Author:} & Sergei Mironov & \textbf{Source:} & \href{!SOURCELINK!}{GitHub} \\
-\textbf{Date:} & \localdate{\today} & \textbf{GPG} & Blabla \\
-\textbf{Git hash:} & \texttt{!GITHASH!} & \textbf{Size:} & \pageref{LastPage} pages \\
+\begin{tabular}{L{1.7cm} R{4.5cm} | L{1.7cm} R{4.5cm}}
+\textbf{Signed:} & !GPGNAME! & \textbf{Email:} & !GPGEMAIL! \\
+\textbf{Git:} & \texttt{!GITHASH!} & \textbf{Source:} & \href{!SOURCELINK!}{GitHub} \\
+\textbf{Date:} & \localdate{\today} & \textbf{Size:} & \pageref{LastPage} pages \\
 \end{tabular}
 \end{center}
 
@@ -30,6 +34,19 @@
 \tableofcontents
 
 \input{!BODYFILE!}
+
+\section{Reproducing}
+
+This document was compiled with reproducibility in mind, the source archive is attached and
+gpg-signed by !GPGNAME! \texttt{<!GPGEMAIL!>}.
+
+Sources: \attachfile{!SOURCEFILE!}
+
+Signature: \attachfile{!GPGSIGFILE!}
+
+Signature verbatim:
+
+\verbatiminput{!GPGSIGFILE!}
 
 \printbibliography
 

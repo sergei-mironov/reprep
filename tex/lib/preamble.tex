@@ -12,7 +12,8 @@
 \usepackage{mdframed}
 \usepackage[colorlinks,urlcolor=blue]{hyperref}
 \usepackage{verbatim}
-%\usepackage{fancyvrb}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{fancyvrb}
 \usepackage[outputdir=_build]{minted}
 \renewcommand{\MintedPygmentize}{pygmentize}
 \usepackage[ruled,linesnumbered]{algorithm2e}
@@ -129,18 +130,13 @@ breaklines=true
 \BeforeBeginEnvironment{codeai}{\begin{mdframed}[nobreak=true,frametitle=\tiny{AI}]}
 \AfterEndEnvironment{codeai}{\end{mdframed}}
 
+% LitREPL-compatible ai secitons
 \newenvironment{ai}
   {\vsp\textbf{User:}\vsp}
   {}
 \newenvironment{airesult}
   {\vsp\textbf{AI:}\vsp}
   {}
-% \newenvironment{ai}
-%   {\VerbatimEnvironment
-%    \begin{minted}[autogobble,breaklines,fontsize=\footnotesize]{text}}
-%   {\end{minted}}
-% \BeforeBeginEnvironment{ai}{\begin{mdframed}[nobreak=true,frametitle=\tiny{AI}]}
-% \AfterEndEnvironment{ai}{\end{mdframed}}
 
 % LitREPL-compatible environment for code results
 \newenvironment{result}
@@ -161,3 +157,19 @@ breaklines=true
 \renewcommand*{\u}{\begingroup\@makeother\%\@myhref}
 \newcommand*{\@myhref}[2]{\href{#2}{#1}\endgroup}
 \makeatother
+
+% redefine \VerbatimInput
+\RecustomVerbatimCommand{\verbatiminput}{VerbatimInput}%
+{fontsize=\footnotesize,
+ %
+ % frame=lines,  % top and bottom rule only
+ framesep=2em, % separation between frame and text
+ rulecolor=\color{Gray},
+ %
+ label=\fbox{\color{Black}data.txt},
+ labelposition=topline,
+ %
+ commandchars=\|\(\), % escape character and argument delimiters for
+                      % commands within the verbatim
+ commentchar=*        % comment character
+}
