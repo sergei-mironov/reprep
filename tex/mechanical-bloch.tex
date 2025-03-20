@@ -25,19 +25,19 @@ import matplotlib.pyplot as plt
 The Newton's second law gives us the following equations:
 
 \[
-  F(t) - k \cdot x_a - \kappa(x_a - x_b) = m \ddot{x_a}
-\]
-\[
-  \kappa(x_a - x_b) - k x_b = m \ddot{x_b}
+\begin{cases}
+  \displaystyle F(t) - k \cdot x_a - \kappa(x_a - x_b) = m \ddot{x_a} \\
+  \displaystyle \kappa(x_a - x_b) - k x_b = m \ddot{x_b}
+\end{cases}
 \]
 
 The main motion equations are:
 
 \[
-  \ddot{x_a} + x_a\frac{k + \kappa}{m} - x_b\frac{\kappa}{m} = \frac{1}{m}F(t)
-\]
-\[
-  \ddot{x_b} + x_b\frac{k + \kappa}{m} - x_a\frac{\kappa}{m} = 0
+\begin{cases}
+  \displaystyle \ddot{x_a} + x_a\frac{k + \kappa}{m} - x_b\frac{\kappa}{m} = \frac{1}{m}F(t) \\
+  \displaystyle \ddot{x_b} + x_b\frac{k + \kappa}{m} - x_a\frac{\kappa}{m} = 0
+\end{cases}
 \]
 
 Following the paper, we define carrier frequency $\Omega_0^2 = \frac{k+\kappa}{m}$ and coupling
