@@ -51,13 +51,16 @@ Sources: \attachfile{!SOURCEFILE!} & Signature: \attachfile{!GPGSIGFILE!} \\ \hl
 \end{center}
 
 The following commands can be used to verify the signature. They are usually included in the
-packages \t{curl}, \t{poppler-utils}, and \t{gpg}.
+packages \t{poppler-utils} and \t{gpg}.
 
 \begin{sh}
-curl https://github.com/sergei-mironov.gpg | gpg --import
 pdfdetach -saveall !DESTFILE!
 gpg --verify !GPGSIGFILE! !SOURCEFILE!
 \end{sh}
+
+You can import the author's GPG public key from GitHub, for example, with the following:
+
+\t{curl https://github.com/sergei-mironov.gpg | gpg --import}.
 
 \printbibliography
 
