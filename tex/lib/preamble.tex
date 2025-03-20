@@ -123,6 +123,14 @@ breaklines=true
 \AfterEndEnvironment{python}{\end{mdframed}}
 
 % LitREPL-compatible environment for code snippets
+\newenvironment{sh}
+  {\VerbatimEnvironment
+   \begin{minted}[autogobble,breaklines,fontsize=\footnotesize]{sh}}
+  {\end{minted}}
+\BeforeBeginEnvironment{sh}{\begin{mdframed}[nobreak=false,everyline=true,frametitle=\tiny{Shell}]}
+\AfterEndEnvironment{sh}{\end{mdframed}}
+
+% LitREPL-compatible environment for code snippets
 \newenvironment{codeai}
   {\VerbatimEnvironment
    \begin{minted}[autogobble,breaklines,fontsize=\footnotesize]{text}}

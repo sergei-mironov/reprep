@@ -54,12 +54,10 @@ The below commands could be used to check the signature. The commands are typica
 the \t{poppler-utils} and \t{gpg} packages.
 
 \begin{sh}
+curl https://github.com/sergei-mironov.gpg | gpg --import
 pdfdetach -saveall !DESTFILE!
 gpg --verify !GPGSIGFILE! !SOURCEFILE!
 \end{sh}
-
-\begin{result}
-\end{result}
 
 \printbibliography
 
