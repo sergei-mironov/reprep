@@ -14,6 +14,7 @@ LIB = $(shell find ./lib -name '*tex')
 
 %.pdf: %.sig
 	sed -e 's@!BODYFILE!@$*.tex@g' \
+	    -e 's@!DESTFILE!@$@@g' \
 	    -e 's@!TITLE!@$(shell yq -r '.title' $*.yaml)@g' \
 	    -e 's@!ABSTRACT!@$(shell yq '.abstract' $*.yaml | sed 's@^.@@;s@.$$@@')@g' \
 	    -e 's@!GITHASH!@$(shell git rev-parse --short=7 HEAD)@g' \

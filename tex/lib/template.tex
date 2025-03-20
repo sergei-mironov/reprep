@@ -40,10 +40,6 @@
 This document was compiled with reproducibility in mind, the source archive is attached and
 gpg-signed by !GPGNAME! \texttt{<!GPGEMAIL!>}.
 
-% Here is a LaTeX code snippet for a table with 2 rows and 2 columns
-% where the cells of the second row are joined into one.
-
-
 \begin{center}
 \begin{tabular}{|C{5cm}|C{5cm}|}
 \hline
@@ -54,6 +50,16 @@ Sources: \attachfile{!SOURCEFILE!} & Signature: \attachfile{!GPGSIGFILE!} \\ \hl
 \end{tabular}
 \end{center}
 
+The below commands could be used to check the signature. The commands are typically available from
+the \t{poppler-utils} and \t{gpg} packages.
+
+\begin{sh}
+pdfdetach -saveall !DESTFILE!
+gpg --verify !GPGSIGFILE! !SOURCEFILE!
+\end{sh}
+
+\begin{result}
+\end{result}
 
 \printbibliography
 
