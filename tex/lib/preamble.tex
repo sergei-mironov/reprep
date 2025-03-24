@@ -34,6 +34,8 @@
 \usepackage{enumitem}
 \usepackage{tikzsymbols}
 \usepackage{array}
+
+% Table formatters
 \newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
 \newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
 \newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
@@ -59,13 +61,24 @@ breaklines=true
 \newcommand{\CLR}[2]{\begingroup\color{#1}#2\endgroup}
 \newcommand{\R}[1]{\begingroup\color{red}#1\endgroup}
 \newcommand{\G}[1]{\begingroup\color{green}#1\endgroup}
-\newcommand{\B}[1]{\begingroup\color{blue}#1\endgroup}
+\newenvironment{GREY}{\begingroup\color{gray}}{\endgroup}
+\newcommand{\GR}[1]{\begin{GREY}#1\end{GREY}}
+\newenvironment{BLUE}{\begingroup\color{blue}}{\endgroup}
+\newcommand{\B}[1]{\begin{BLUE}#1\end{BLUE}}
 \newcommand{\Y}[1]{\begingroup\color{yellow}#1\endgroup}
 \newcommand{\N}{\mathbb{N}}
 \newcommand{\Z}{\mathbb{Z}}
 \newcommand{\Rational}{\mathbb{R}}
 \newcommand{\Rat}{\mathbb{R}}
 \newcommand{\Pow}{\mathbb{P}}
+
+% Question counters
+\newcounter{questionCounter}
+\newenvironment{QUESTION}{%
+  \stepcounter{questionCounter}\vsp\begin{BLUE}\textbf{Question \thequestionCounter}: }{%
+  \end{BLUE}}
+
+\newcommand{\Q}[1]{\begin{QUESITON}#1\end{QUESTION}}
 
 \newcommand{\vsp}[0]{\vspace*{10pt}\par}
 \newcommand{\tcite}[1]{\textit{(\citefield{#1}{year}, \citeauthor{#1})}\:\textit{``\citefield{#1}{title}''}\:\cite{#1}}

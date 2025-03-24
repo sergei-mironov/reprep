@@ -9,6 +9,13 @@
 \newcommand{\Om}[0]{\Omega_{-}}
 \newcommand{\Opm}[0]{\Omega_{\pm}}
 \newcommand{\Omp}[0]{\Omega_{\mp}}
+\newcommand{\dO}[0]{\Delta\Omega}
+\newcommand{\od}[0]{\omega_d(t)}
+\renewcommand{\a}[0]{a(t)}
+\renewcommand{\b}[0]{b(t)}
+\newcommand{\odr}[0]{\omega_{drive}}
+\newcommand{\ar}[0]{\overline{a}(t)}
+\newcommand{\br}[0]{\overline{b}(t)}
 
 
 \section{Setup}
@@ -68,7 +75,8 @@ Following the paper, we define:
 \li Coupling frequency $\Oc^2 = \frac{\K}{m}$
 \li Detuning frequence $\Od^2 = \frac{\dk}{m}$
 \le
-We assume that \(\Oz \gg \Oc\).
+
+% We assume that \(\Oz \gg \Oc\).
 
 In matrix form, the (\ref{main}) becomes:
 
@@ -91,13 +99,27 @@ In matrix form, the (\ref{main}) becomes:
 \]
 
 
+\begin{GREY}
+The common strategy to solve these equations in the absence of detuning $\Od$ would be to (a) get
+equivalent independent eigenmode equations by adding and subtracting the equations and substituting
+$\xp = x_a + x_b$ and $\xm = x_a - x_b$; (b) Solve the new equations one by one. In the paper
+authors show that the detuned eigenmodes differ from the ideal case. However, they continue with the
+$\xp$ and $\xm$ approach and a number of additional assumptions despite providing us with the exact
+eigenmode equations.
+\end{GREY}
+
+\begin{QUESTION}
+In the paper, the exact solutions for eigenfrequences are provided: \(\Opm = \left(\Oz^2
+\mp \sqrt{\Od^4 + \Oc^4}\right)^{1/2}\). How to come to it?
+\end{QUESTION}
+
 \subsection{Normal modes}
 
-In order to get to (almost) independent equations we set $\xp = x_a + x_b$ and $\xm = x_a - x_b$.
-Then we add and subtract equations from \ref{main} to get:
+In order to get to (almost) independent equations we follow the paper by putting $\xp = x_a + x_b$
+and $\xm = x_a - x_b$.  Then we add and subtract equations from \ref{main} to get:
 
 
-\[
+\begin{equation}
 \ddot{\begin{bmatrix}
   \xp \\
   \xm
@@ -112,27 +134,131 @@ Then we add and subtract equations from \ref{main} to get:
   \xm
 \end{bmatrix}
 = 0
-\]
+\label{normal}
+\end{equation}
 
 
-\QUESTION{In the paper, the exact solutions for eigenfrequences are provided: \(\Opm = \left(\Oz^2
-\mp \sqrt{\Od^4 + \Oc^4}\right)^{1/2}\). How to come to it?}
-
-
-We continue with almost-diagonal matrix. Assume the solutions in form of:
+We continue with this almost-diagonal matrix. Assume the solutions in form of:
 
 \[
   \begin{cases}
-    x_+ = Re[a(t)e^{i\Omega_0 t}] \\
-    x_- = Re[b(t)e^{i\Omega_0 t}]
+    x_+ = a(t)e^{i\Omega_0 t} \\
+    x_- = b(t)e^{i\Omega_0 t}
   \end{cases}
 \]
 
-where $a(t)$ and $b(t)$ are complelx amplitudes. We put these forms into \ref{normal}, calculate the
+where $a(t)$ and $b(t)$ are complex amplitudes. We put these forms into \ref{normal}, calculate the
 second derivatives and apply the following simplifications:
 
-\ls SVEA: let second derivative be zero
+\ls Slowly-varying amplitude approximation (SVEA): neglect terms containing second derivatives of
+$a(t)$ and $b(t)$.
 \le
+
+
+\[
+2i
+\dot{\begin{bmatrix}
+  \a \\
+  \b
+\end{bmatrix}}
+=
+\begin{bmatrix}
+  \displaystyle \frac{\Oc^2}{\Oz} & \displaystyle \frac{\Od^2}{\Oz} \\
+  \displaystyle \frac{\Od^2}{\Oz} & \displaystyle -\frac{\Oc^2}{\Oz}
+\end{bmatrix}
+\begin{bmatrix}
+  \a \\
+  \b
+\end{bmatrix}
+\]
+
+We futher note that:
+\ls $\Od^2/\Oz$ is approximately equal to the $\dO = \Om - \Op$ as they are defined in the
+paper, due to the known fact about the squre root
+difference\footnote{\url{https://math.stackexchange.com/questions/231234/difference-of-square-roots-approximation}}.
+\li Following the paper, we define rescaled detuning frequency $\od = \Od^2/\Oz$.
+\le
+
+This is how we get to the paper's equation (13) which resembles the Schrodinger equation
+\(i\hbar\dot{\ket{\psi}} = H\ket{\psi}\).
+
+\begin{equation}
+i2
+\dot{\begin{bmatrix}
+  \a \\
+  \b
+\end{bmatrix}}
+=
+\begin{bmatrix}
+  \dO & \od \\
+  \od & -\dO
+\end{bmatrix}
+\begin{bmatrix}
+  \a \\
+  \b
+\end{bmatrix}
+\label{normalamp}
+\end{equation}
+
+\subsection{Parametrically-driven system}
+
+We now proceed to choosing the particular $\dk$. Following the paper we put:
+
+\[
+  \dk = -2 \Oz m A * cos(\odr t)
+\]
+
+so that
+
+\[
+  \od = -A (e^{i \odr t} + e^{-i \odr t})
+\]
+
+We apply the Rotating wave approximation (RWA):
+\ls Assume
+    \[
+      \begin{cases}
+      \displaystyle \a = \ar exp(-i\frac{\odr}{2}t) \\
+      \displaystyle \b = \br exp(+i\frac{\odr}{2}t)
+      \end{cases}
+    \]
+\li Neglect the $exp(\pm3i\odr t/2)$ terms as we believe they will be averaged out on our time
+    scale.
+\le
+
+to get the equation (17) from the paper:
+
+
+\begin{equation}
+i2
+\dot{\begin{bmatrix}
+  \ar \\
+  \br
+\end{bmatrix}}
+=
+\begin{bmatrix}
+  (\dO - \odr) & -A \\
+  -A & -(\dO - \odr)
+\end{bmatrix}
+\begin{bmatrix}
+  \ar \\
+  \br
+\end{bmatrix}
+\label{rotamp}
+\end{equation}
+
+We note that the main matrix of the equation does not contain functions any more. The paper contains
+the exact solution (19) for these equations.
+
+\vsp
+TODO: copy the solutions from the paper
+\vsp
+
+We can also see that if we chose $\odr = \dO$ then we get $\ar$ and $\br$ oscillating with the Rabi
+frequency $\Omega_R = \sqrt{A^2 + (\dO - \odr)^2} = A$.
+
+
+
 
 \section{Following the book}
 \tcite{smith2010waves}.
