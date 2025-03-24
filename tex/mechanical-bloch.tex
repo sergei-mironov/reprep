@@ -1,3 +1,16 @@
+\newcommand{\dk}[0]{\Delta k(t)}
+\newcommand{\K}[0]{\kappa}
+\newcommand{\Oc}[0]{\Omega_c}
+\newcommand{\Oz}[0]{\Omega_0}
+\newcommand{\Od}[0]{\Omega_d(t)}
+\newcommand{\xp}[0]{x_+}
+\newcommand{\xm}[0]{x_-}
+\newcommand{\Op}[0]{\Omega_{+}}
+\newcommand{\Om}[0]{\Omega_{-}}
+\newcommand{\Opm}[0]{\Omega_{\pm}}
+\newcommand{\Omp}[0]{\Omega_{\mp}}
+
+
 \section{Setup}
 
 
@@ -22,185 +35,104 @@ import matplotlib.pyplot as plt
   \includegraphics[width=0.6\textwidth]{img/osc.png}
 \end{center}
 
-The Newton's second law gives us the following equations:
+\subsection{Motion equation}
+
+We start by applying Newton's second law to the system. We set \(F(t) = 0\) since we are not
+interested in the direct manipulations. Instead, we treat \(\Delta k\) as a function of time $\dk$
+and use it to control the system by analogy to quantum control.
+
+As usual, we assume that $x_a$ and $x_b$ are also functions $\Rat \to \Rat$ from time to coordinate.
+
+We assume that positive forces act from left to right and negative from right to left.
 
 \[
 \begin{cases}
-  \displaystyle F(t) - k \cdot x_a - \kappa(x_a - x_b) = m \ddot{x_a} \\
-  \displaystyle \kappa(x_a - x_b) - k x_b = m \ddot{x_b}
+  \displaystyle - (k - \dk) \cdot x_a - \K (x_a - x_b) = m \ddot{x_a} \\
+  \displaystyle \K(x_a - x_b) - (k + \dk) x_b = m \ddot{x_b}
 \end{cases}
 \]
 
-The main motion equations are:
+Divide by $m$ and rearrange to get equation (1) from the paper:
+
+\begin{equation}
+  \begin{cases}
+    \displaystyle \ddot{x_a} + x_a\left[\frac{k + \kappa}{m} - \frac{\dk}{m}\right] - x_b\frac{\kappa}{m} = 0 \\
+    \displaystyle \ddot{x_b} + x_b\left[\frac{k + \kappa}{m} + \frac{\dk}{m}\right] - x_a\frac{\kappa}{m} = 0
+  \end{cases}
+\label{main}
+\end{equation}
+
+
+Following the paper, we define:
+\ls Carrier frequency $\Oz^2 = \frac{k+\K}{m}$
+\li Coupling frequency $\Oc^2 = \frac{\K}{m}$
+\li Detuning frequence $\Od^2 = \frac{\dk}{m}$
+\le
+We assume that \(\Oz \gg \Oc\).
+
+In matrix form, the (\ref{main}) becomes:
 
 \[
-\begin{cases}
-  \displaystyle \ddot{x_a} + x_a\frac{k + \kappa}{m} - x_b\frac{\kappa}{m} = \frac{1}{m}F(t) \\
-  \displaystyle \ddot{x_b} + x_b\frac{k + \kappa}{m} - x_a\frac{\kappa}{m} = 0
-\end{cases}
-\]
-
-Following the paper, we define carrier frequency $\Omega_0^2 = \frac{k+\kappa}{m}$ and coupling
-frequency $\Omega_c^2 = \frac{\kappa}{m}$.
-
-\[
-  m \frac{d^2x_A}{dt^2} + m \gamma \frac{dx_A}{dt} + \left(k + \kappa - \Delta
-k(t)\right)x_A
-  - \kappa x_B = F(t)
-\]
-\[
-  m \frac{d^2x_B}{dt^2} + m \gamma \frac{dx_B}{dt} + \left(k + \kappa + \Delta
-k(t)\right)x_B
-  - \kappa x_A = 0
-\]
-
-Dividing by $m$.
-
-\[
-  \frac{d^2x_A}{dt^2} + \gamma \frac{dx_A}{dt} + \left(\frac{k + \kappa}{m} - \frac{\Delta
-    k(t)}{m}\right)x_A -\frac{\kappa}{m}x_B = \frac{1}{m}F(t)
-\]
-\[
-  \frac{d^2x_B}{dt^2} + \gamma \frac{dx_B}{dt} + \left(\frac{k + \kappa}{m} + \frac{\Delta
-    k(t)}{m}\right)x_B -\frac{\kappa}{m}x_A = 0
-\]
-
-Introducing $\Omega$ frequencies:
-
-\[
-  \Omega_0^2 = [k + \kappa]/m
-\]
-
-\[
-  \Omega_d^2 = \Delta k / m
-\]
-
-\[
-  \Omega_c^2 = \kappa / m
-\]
-
-becomes
-
-\[
-\begin{pmatrix}
-  \frac{d^2}{dt^2} + \gamma \frac{d}{dt} + \Omega_0^2
-\end{pmatrix}
-\begin{pmatrix}
- x_A \\
- x_B
-\end{pmatrix}
+\ddot{\begin{bmatrix}
+  x_a \\
+  x_b
+\end{bmatrix}}
 +
-\begin{pmatrix}
-  -\Omega_d^2 & -\Omega_c^2 \\ -\Omega_c^2 & \Omega_d^2
-\end{pmatrix}
-\begin{pmatrix}
- x_A \\
- x_B
-\end{pmatrix}
+\begin{bmatrix}
+  \Oz^2 - \Od^2 & -\Oc^2 \\
+  -\Oc^2 & \Oz^2 + \Od^2
+\end{bmatrix}
+\begin{bmatrix}
+  x_a \\
+  x_b
+\end{bmatrix}
 =
-\begin{pmatrix}
- F(t) \\
- 0
-\end{pmatrix}
+0
 \]
 
 
-\begin{ai}
-Please rewrite the below two equation into the matrix form. I'd like to be like
+\subsection{Normal modes}
 
-\vsp
+In order to get to (almost) independent equations we set $\xp = x_a + x_b$ and $\xm = x_a - x_b$.
+Then we add and subtract equations from \ref{main} to get:
 
-\verb|(...)(x_A ; x_B) + (...) (x_A; x_B) = (f(t) ; 0)|.
 
 \[
-  \frac{d^2x_A}{dt^2} + \gamma \frac{dx_A}{dt} + \left(\frac{k + \kappa}{m} - \frac{\Delta
-    k(t)}{m}\right)x_A -\frac{k}{m}x_B = \frac{1}{m}F(t)
-\]
-\[
-  \frac{d^2x_B}{dt^2} + \gamma \frac{dx_B}{dt} + \left(\frac{k + \kappa}{m} + \frac{\Delta
-    k(t)}{m}\right)x_B -\frac{k}{m}x_A = 0
-\]
-
-Introducing $\Omega$ frequencies:
-
-\[
-  \Omega_0^2 = [k + \kappa]/m
-\]
-
-\[
-  \Omega_d^2 = \Delta k / m
-\]
-
-\[
-  \Omega_c^2 = \kappa / m
+\ddot{\begin{bmatrix}
+  \xp \\
+  \xm
+\end{bmatrix}}
++
+\begin{bmatrix}
+  \Oz^2 - \Oc^2 & -\Od^2 \\
+  -\Od^2 & \Oz^2 + \Oc^2
+\end{bmatrix}
+\begin{bmatrix}
+  \xp \\
+  \xm
+\end{bmatrix}
+= 0
 \]
 
 
-\end{ai}
+\QUESTION{In the paper, the exact solutions for eigenfrequences are provided: \(\Opm = \left(\Oz^2
+\mp \sqrt{\Od^4 + \Oc^4}\right)^{1/2}\). How to come to it?}
 
-\begin{airesult}
-To rewrite the given equations in matrix form, we'll utilize the newly introduced frequencies
-\(\Omega_0\), \(\Omega_d\), and \(\Omega_c\). We then represent the system using matrix operations
-on a vector composed of \(x_A\) and \(x_B\).
 
-The two equations provided are:
-
-\vsp
+We continue with almost-diagonal matrix. Assume the solutions in form of:
 
 \[
-\frac{d^2x_A}{dt^2} + \gamma\frac{dx_A}{dt} + \left( \frac{k + \kappa}{m} - \frac{\Delta k(t)}{m}
-\right)x_A
-- \frac{k}{m}x_B = \frac{1}{m}F(t)
+  \begin{cases}
+    x_+ = Re[a(t)e^{i\Omega_0 t}] \\
+    x_- = Re[b(t)e^{i\Omega_0 t}]
+  \end{cases}
 \]
 
-\[
-\frac{d^2x_B}{dt^2} + \gamma\frac{dx_B}{dt} + \left( \frac{k + \kappa}{m} + \frac{\Delta k(t)}{m}
-\right)x_B
-- \frac{k}{m}x_A = 0
-\]
+where $a(t)$ and $b(t)$ are complelx amplitudes. We put these forms into \ref{normal}, calculate the
+second derivatives and apply the following simplifications:
 
-\vsp
-
-Using the new frequency parameters, the equations become:
-
-\vsp
-
-\[
-\frac{d^2x_A}{dt^2} + \gamma\frac{dx_A}{dt} + \left( \Omega_0^2 - \Omega_d^2 \right)x_A
-- \frac{k}{m}x_B = \frac{1}{m}F(t)
-\]
-
-\[
-\frac{d^2x_B}{dt^2} + \gamma\frac{dx_B}{dt} + \left( \Omega_0^2 + \Omega_d^2 \right)x_B
-- \frac{k}{m}x_A = 0
-\]
-
-\vsp
-
-To express these in a matrix form:
-
-\[
-\begin{pmatrix}
- \frac{d^2}{dt^2} + \gamma \frac{d}{dt} + (\Omega_0^2 - \Omega_d^2) & -\frac{k}{m} \\
- -\frac{k}{m} & \frac{d^2}{dt^2} + \gamma \frac{d}{dt} + (\Omega_0^2 + \Omega_d^2)
-\end{pmatrix}
-\begin{pmatrix}
- x_A \\
- x_B
-\end{pmatrix}
-=
-\begin{pmatrix}
- \frac{1}{m}F(t) \\
- 0
-\end{pmatrix}
-\]
-
-\vsp
-
-This representation condenses the system of differential equations into a single matrix equation,
-allowing easier manipulation and understanding of the coupled dynamics.
-\end{airesult}
-
+\ls SVEA: let second derivative be zero
+\le
 
 \section{Following the book}
 \tcite{smith2010waves}.
