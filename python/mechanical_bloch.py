@@ -1,4 +1,4 @@
-import pennylane as qml
+# import pennylane as qml
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -16,6 +16,8 @@ class PendulumProblem:
   k:float=0.5
   g:float=9.81
 
+# {{{ Simulation
+
 @dataclass
 class Simulation:
   t:ndarray
@@ -23,6 +25,8 @@ class Simulation:
   v1:ndarray
   x2:ndarray
   v2:ndarray
+
+# }}} Simulation
 
 
 def coupled_pendulums(p:PendulumProblem, x10=0.01, x20=0.01, v10=0.0, v20=0.0) -> Simulation:
@@ -60,29 +64,22 @@ def coupled_pendulums(p:PendulumProblem, x10=0.01, x20=0.01, v10=0.0, v20=0.0) -
   return Simulation(solution.t, *[np.array(x) for x in solution.y])
 
 
+# {{{ OscProblem
+
 @dataclass
 class OscProblem:
-  m: float = 0.9   # mass in kg
-  k: float = 5     # constant for main oscillating springs
-  K: float = 0.5   # constant for spring connecting two oscillators
-  A: float = 0.09     # FIXME: select appropriate
-  wdrive: float|None = None # = 0.3 # FIXME: check comparable
-  # Calculated
-  sigma02:float|None = None
-  sigmac2:float|None = None
-  dsigma:float|None = None
-  delta:float|None = None
-  sigmaR:float|None = None
+  m:float        = 0.9   # mass in kg
+  k:float        = 5     # constant for main oscillating springs
+  K:float        = 0.5   # constant for spring connecting two oscillators
+  A:float        = 0.09  # FIXME: select appropriate
+  sigma02:float  = (k + K) / m
+  sigmac2:float  = K / m
+  dsigma:float   = sigmac2 / sqrt(sigma02)
+  wdrive:float   = dsigma
+  delta:float    = dsigma - wdrive
+  sigmaR:float   = sqrt(A**2 + delta**2)
 
-  def __post_init__(self):
-    # print(f"OscProblem initialized with m={self.m}, k={self.k}, K={self.K}")
-    self.sigma02 = (self.k + self.K) / self.m
-    self.sigmac2 = self.K / self.m
-    self.dsigma = self.sigmac2 / sqrt(self.sigma02)
-    self.wdrive = self.dsigma
-    self.delta = self.dsigma - self.wdrive
-    self.sigmaR = sqrt(self.A**2 + self.delta**2)
-
+# }}} OscProblem
 
 def coupled_oscillators(p:OscProblem, xa0=0.01, xb0=0.01, va0=0.0, vb0=0.0)->Simulation:# {{{
   """ Coupled oscillators with periodic detuning, as described in the paper "The Classical Bloch
@@ -114,6 +111,8 @@ def coupled_oscillators(p:OscProblem, xa0=0.01, xb0=0.01, va0=0.0, vb0=0.0)->Sim
   return Simulation(solution.t, *[np.array(x) for x in solution.y])
 # }}}
 
+# {{{ coupled_detuned_oscillators
+
 def coupled_detuned_oscillators(p:OscProblem, xa0=0.01, xb0=0.01, va0=0.0, vb0=0.0)->Simulation:
   """ Coupled oscillators with periodic detuning, as described in the paper "The Classical Bloch
   Equations". The function builds and sovles the system of ODEs corresponding to the problem.
@@ -138,6 +137,7 @@ def coupled_detuned_oscillators(p:OscProblem, xa0=0.01, xb0=0.01, va0=0.0, vb0=0
   solution = solve_ivp(_ode, t_span, state0, t_eval=t_eval)
   return Simulation(solution.t, *[np.array(x) for x in solution.y])
 
+# }}} coupled_detuned_oscillators
 
 def splot(name:str|None, sol:Simulation)->None:# {{{
   # Plot the results on separate subplots

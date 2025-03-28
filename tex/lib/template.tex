@@ -37,8 +37,9 @@
 
 \section{Reproducing}
 
-This document was compiled with reproducibility in mind, the source archive is attached and
-gpg-signed by !GPGNAME! \texttt{<!GPGEMAIL!>}.
+This document is created with a focus on reproducibility. It contains both the \LaTeX\ source
+archive and it's GPG signature by !GPGNAME! \texttt{<!GPGEMAIL!>} embedded within this PDF. The
+build instructions will follow.
 
 \begin{center}
 \begin{tabular}{|C{5cm}|C{5cm}|}
@@ -50,7 +51,7 @@ Sources: \attachfile{!SOURCEFILE!} & Signature: \attachfile{!GPGSIGFILE!} \\ \hl
 \end{tabular}
 \end{center}
 
-The following commands can be used to verify the signature. They are usually included in the
+The following commands can be used to verify the GPG signature. They are usually included in the
 packages \t{poppler-utils} and \t{gpg}.
 
 \begin{sh}
@@ -58,9 +59,10 @@ pdfdetach -saveall !DESTFILE!
 gpg --verify !GPGSIGFILE! !SOURCEFILE!
 \end{sh}
 
-You can import the author's GPG public key from GitHub, for example, with the following:
+You can access the author's public GPG keys as follows:
 
-\t{curl https://github.com/sergei-mironov.gpg | gpg --import}.
+\ls Sergei Mironov: \t{curl https://github.com/sergei-mironov.gpg | gpg --import}.
+\le
 
 \printbibliography
 
