@@ -205,7 +205,7 @@ i2
 We now proceed to choosing the particular $\dk$. Following the paper we put:
 
 \[
-  \dk = -2 \Oz m A * cos(\odr t)
+  \dk = -2 \Oz m A * \cos(\odr t)
 \]
 
 so that
@@ -218,8 +218,8 @@ We apply the Rotating wave approximation (RWA):
 \ls Assume
     \[
       \begin{cases}
-      \displaystyle \a = \ar exp(-i\frac{\odr}{2}t) \\
-      \displaystyle \b = \br exp(+i\frac{\odr}{2}t)
+      \displaystyle \a = \ar \exp(-i\frac{\odr}{2}t) \\
+      \displaystyle \b = \br \exp(+i\frac{\odr}{2}t)
       \end{cases}
     \]
 \li Neglect the $exp(\pm3i\odr t/2)$ terms as we believe they will be averaged out on our time
@@ -247,17 +247,24 @@ i2
 \label{rotamp}
 \end{equation}
 
-We note that the main matrix of the equation does not contain functions any more. The paper contains
-the exact solution (19) for these equations.
+We may note that the main matrix of the equation does not contain functions any more. While the
+paper contains the full solution (19) for these equations, we are mainly interested in running Rabi
+oscillations, for which we can choose $\odr = \dO$. For this special case, the equations will show
+as $2i \dot{\ar} + A \br = 0$ and $2i \dot{\br} + A \ar = 0$ with the solution
+\footnote{\url{https://web.spms.ntu.edu.sg/~ydchong/teaching/05_complex_oscillations.pdf}}:
 
-\vsp
-TODO: copy the solutions from the paper
-\vsp
+\[
+  \begin{cases}
+    \displaystyle \ar = a_0 \cos(\frac{A}{2}t) + i b_0 \sin(\frac{A}{2}t) \\
+    \displaystyle \br = b_0 \cos(\frac{A}{2}t) + i a_0 \sin(\frac{A}{2}t)
+  \end{cases}
+\]
 
-We can also see that if we chose $\odr = \dO$ then we get $\ar$ and $\br$ oscillating with the Rabi
-frequency $\Omega_R = \sqrt{A^2 + (\dO - \odr)^2} = A$.
+where $a_0 = \overline{a}(0)$ and $b_0 = \overline{b}(0)$.
 
-
+In other words, in order to transfer the system from "$+$" eigenmode $\begin{bmatrix}a_0 \\
+0\end{bmatrix}$ to "$-$" eigenmode $\begin{bmatrix}0 \\ b_0\end{bmatrix}$ one need to enable the
+$\od = \dO$ detuning and wait for $\pi/A$ time units.
 
 
 \section{Following the book}
