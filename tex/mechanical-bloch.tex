@@ -408,3 +408,26 @@ We create the problem instance, run the simulation and plot the normal mode coor
 \end{figure}
 
 
+
+  \begin{python}
+  from mechanical_bloch import *
+  from math import pi
+  p = OscProblem()
+  i = Initials()
+  s = Schedule([(10, 10*pi)])
+  # s = Schedule([])
+  sim = coupled_detuned_oscillators_p(p,s,i)
+  fig = splotn("dosc2", sim)
+  \end{python}
+
+  \begin{comment}
+  \begin{result}
+  \end{result}
+  \end{comment}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=0.8\textwidth]{\linline{fig}{img/mechanical-bloch-f1-dosc2.png}}
+  \caption{This is a mock description of the figure illustrating the mechanical Bloch system.}
+  \label{fig:mechanical_bloch}
+\end{figure}

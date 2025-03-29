@@ -149,6 +149,44 @@ def coupled_detuned_oscillators(p:OscProblem, xa0=0.01, xb0=0.01, va0=0.0, vb0=0
 
 # }}} coupled_detuned_oscillators
 
+@dataclass
+class Initials:
+  xa0 :float = 0.01
+  va0 :float = 0.0
+  xb0 :float = 0.01
+  vb0 :float = 0.0
+
+def within(t:Time, sched) -> bool:
+  for seg in sched:
+    if seg[0] <= t < seg[0]+seg[1]:
+      return True
+  return False
+
+def coupled_detuned_oscillators_p(p:OscProblem, s:Schedule, i:Initials)->Simulation:
+  """ Coupled oscillators with periodic detuning, as described in the paper "The Classical Bloch
+  Equations". The function builds and sovles the system of ODEs corresponding to the problem.
+  """
+  xa0, va0, xb0, vb0 = list(i.__dict__.values())
+  m, k, K, *_ = list(p.__dict__.values())
+  sigma02, A = p.sigma02, p.A
+  sigma0 = sqrt(sigma02)
+  nt = 1000
+  t_span = (0, 90)
+  t_eval = np.linspace(t_span[0], t_span[1], nt)
+  state0 = [xa0, va0, xb0, vb0]
+
+  def _ode(t, state):
+    xa, va, xb, vb = state
+    dk = -2.0 * sigma0 * m * A * cos(p.wdrive * t) if within(t, s.wdrive) else 0.0
+    dxadt = va
+    dxbdt = vb
+    dvadt = - xa * ((k + K) / m - dk / m) + xb * (K / m)
+    dvbdt = - xb * ((k + K) / m + dk / m) + xa * (K / m)
+    return [dxadt, dvadt, dxbdt, dvbdt]
+
+  solution = solve_ivp(_ode, t_span, state0, t_eval=t_eval)
+  return Simulation(solution.t, *[np.array(x) for x in solution.y])
+
 def splot(name:str|None, sol:Simulation)->None:# {{{
   # Plot the results on separate subplots
   plt.figure(figsize=(10, 8))
