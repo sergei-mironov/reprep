@@ -285,16 +285,16 @@ detuning. First we define the Python dataclass describing the detuned ascillator
   \begin{python}
   @dataclass
   class OscProblem:
-    m:float        = 0.9   # mass in kg
-    k:float        = 5     # constant for main oscillating springs
-    K:float        = 0.5   # constant for spring connecting two oscillators
-    A:float        = 0.09  # FIXME: select appropriate
-    sigma02:float  = (k + K) / m
-    sigmac2:float  = K / m
-    dsigma:float   = sigmac2 / sqrt(sigma02)
-    wdrive:float   = dsigma
-    delta:float    = dsigma - wdrive
-    sigmaR:float   = sqrt(A**2 + delta**2)
+    m:       float = 0.9   # mass in kg
+    k:       float = 5     # constant for main oscillating springs
+    K:       float = 0.5   # constant for spring connecting two oscillators
+    A:       float = 0.09  # FIXME: select appropriate
+    sigma02: float = (k + K) / m
+    sigmac2: float = K / m
+    dsigma:  float = sigmac2 / sqrt(sigma02)
+    wdrive:  float = dsigma
+    delta:   float = dsigma - wdrive
+    sigmaR:  float = sqrt(A**2 + delta**2)
   \end{python}
   %noresult
 
@@ -315,16 +315,37 @@ corresponding speeds
   \begin{python}
   @dataclass
   class Simulation:
-    t:ndarray
-    x1:ndarray
-    v1:ndarray
-    x2:ndarray
-    v2:ndarray
+    t:ndarray   # Time ticks
+    xa:ndarray  # Positions of the 1st bob
+    va:ndarray  # Velocities of the 1st bob
+    xb:ndarray  # Positions of the 2nd bob
+    vb:ndarray  # Velocities of the 2nd bob
+  \end{python}
+  %noresult
+
+To make the problem more illustrative, we encode a schedule of enabling the drive signal
+
+  \begin{comment}
+    \begin{sh}
+    printf '\\begin{%s}\n' 'python'
+    cat $PROJECT_ROOT/python/mechanical_bloch.py | sedlines.sh Schedule
+    printf '\\end{%s}\n' 'python'
+    \end{sh}
+  \end{comment}
+
+  %result
+  \begin{python}
+  Time = float
+
+  @dataclass
+  class Schedule:
+    """ Encodes time intervals when the w_drive signal is enabled. """
+    wdrive:list[tuple[Time,Time]]
   \end{python}
   %noresult
 
 
-The algorithm
+The main algorithm:
 
   \begin{comment}
     \begin{sh}
@@ -361,3 +382,29 @@ The algorithm
     return Simulation(solution.t, *[np.array(x) for x in solution.y])
   \end{python}
   %noresult
+
+
+We create the problem instance, run the simulation and plot the normal mode coordinates.
+
+  \begin{python}
+  from mechanical_bloch import *
+  p = OscProblem()
+  s = coupled_detuned_oscillators(p)
+  fig = splotn("dosc", s)
+  \end{python}
+
+  \begin{comment}
+  \begin{result}
+  Cannot install event loop hook for "qt" when running with `--simple-prompt`.
+  NOTE: Tk is supported natively; use Tk apps and Tk backends with `--simple-prompt`.
+  \end{result}
+  \end{comment}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=0.8\textwidth]{\linline{fig}{img/mechanical-bloch-f1-dosc.png}}
+  \caption{This is a mock description of the figure illustrating the mechanical Bloch system.}
+  \label{fig:mechanical_bloch}
+\end{figure}
+
+

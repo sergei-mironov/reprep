@@ -20,24 +20,34 @@ class PendulumProblem:
 
 @dataclass
 class Simulation:
-  t:ndarray
-  x1:ndarray
-  v1:ndarray
-  x2:ndarray
-  v2:ndarray
+  t:ndarray   # Time ticks
+  xa:ndarray  # Positions of the 1st bob
+  va:ndarray  # Velocities of the 1st bob
+  xb:ndarray  # Positions of the 2nd bob
+  vb:ndarray  # Velocities of the 2nd bob
 
 # }}} Simulation
 
+# {{{ Schedule
 
-def coupled_pendulums(p:PendulumProblem, x10=0.01, x20=0.01, v10=0.0, v20=0.0) -> Simulation:
+Time = float
+
+@dataclass
+class Schedule:
+  """ Encodes time intervals when the w_drive signal is enabled. """
+  wdrive:list[tuple[Time,Time]]
+
+# }}} Schedule
+
+def coupled_pendulums(p:PendulumProblem, xa0=0.01, xb0=0.01, va0=0.0, vb0=0.0) -> Simulation:
   """ Coupled pendulums without detuning. As described in "Waves and Oscillations. Prelude to
   Quantum Mechanincs".
 
   Arguments:
-  - `x10`: initial position of x1 in m
-  - `x20`: initial position of x2 in m
-  - `v10`: initial velocity of x1
-  - `v20`: initial velocity of x2
+  - `xa0`: initial position of xa in m
+  - `xb0`: initial position of xb in m
+  - `va0`: initial velocity of xa
+  - `vb0`: initial velocity of xb
   """
 
   # Constants
@@ -45,19 +55,19 @@ def coupled_pendulums(p:PendulumProblem, x10=0.01, x20=0.01, v10=0.0, v20=0.0) -
 
   # System of equations
   def _ode(t, y):
-    x1, v1, x2, v2 = y
-    dx1dt = v1
-    dv1dt = -(g / l) * x1 - (k / m) * (x1 - x2)
-    dx2dt = v2
-    dv2dt = -(g / l) * x2 - (k / m) * (x2 - x1)
-    return [dx1dt, dv1dt, dx2dt, dv2dt]
+    xa, va, xb, vb = y
+    dxadt = va
+    dvadt = -(g / l) * xa - (k / m) * (xa - xb)
+    dxbdt = vb
+    dvbdt = -(g / l) * xb - (k / m) * (xb - xa)
+    return [dxadt, dvadt, dxbdt, dvbdt]
 
   # Time span for the simulation
   t_span = (0, 10)  # simulate from t=0 to t=10 seconds
   t_eval = np.linspace(t_span[0], t_span[1], 1000)  # time points to evaluate at
 
   # Initial state vector
-  y0 = [x10, v10, x20, v20]
+  y0 = [xa0, va0, xb0, vb0]
 
   # Solve the system of ODEs
   solution = solve_ivp(_ode, t_span, y0, t_eval=t_eval)
@@ -68,16 +78,16 @@ def coupled_pendulums(p:PendulumProblem, x10=0.01, x20=0.01, v10=0.0, v20=0.0) -
 
 @dataclass
 class OscProblem:
-  m:float        = 0.9   # mass in kg
-  k:float        = 5     # constant for main oscillating springs
-  K:float        = 0.5   # constant for spring connecting two oscillators
-  A:float        = 0.09  # FIXME: select appropriate
-  sigma02:float  = (k + K) / m
-  sigmac2:float  = K / m
-  dsigma:float   = sigmac2 / sqrt(sigma02)
-  wdrive:float   = dsigma
-  delta:float    = dsigma - wdrive
-  sigmaR:float   = sqrt(A**2 + delta**2)
+  m:       float = 0.9   # mass in kg
+  k:       float = 5     # constant for main oscillating springs
+  K:       float = 0.5   # constant for spring connecting two oscillators
+  A:       float = 0.09  # FIXME: select appropriate
+  sigma02: float = (k + K) / m
+  sigmac2: float = K / m
+  dsigma:  float = sigmac2 / sqrt(sigma02)
+  wdrive:  float = dsigma
+  delta:   float = dsigma - wdrive
+  sigmaR:  float = sqrt(A**2 + delta**2)
 
 # }}} OscProblem
 
@@ -143,17 +153,17 @@ def splot(name:str|None, sol:Simulation)->None:# {{{
   # Plot the results on separate subplots
   plt.figure(figsize=(10, 8))
 
-  # Plot for x1
+  # Plot for xa
   plt.subplot(211)
-  plt.plot(sol.t, sol.x1, label=r'$x_1$', color='b')
+  plt.plot(sol.t, sol.xa, label=r'$x_1$', color='b')
   plt.ylabel('Displacement (m)')
   plt.title('Coupled Oscillator Simulation')
   plt.legend(loc='upper right')
   plt.grid(True)
 
-  # Plot for x2
+  # Plot for xb
   plt.subplot(212, sharex=plt.gca())
-  plt.plot(sol.t, sol.x2, label=r'$x_2$', color='r')
+  plt.plot(sol.t, sol.xb, label=r'$x_2$', color='r')
   plt.xlabel('Time (s)')
   plt.ylabel('Displacement (m)')
   plt.legend(loc='upper right')
@@ -166,22 +176,22 @@ def splot(name:str|None, sol:Simulation)->None:# {{{
     plt.savefig(f"img/mechanical-bloch-f1-{name}.png")
 # }}}
 
-def splotn(name:str|None, sol:Simulation)->None:
+def splotn(name:str|None, sol:Simulation)->str|None:
   # Plot the results on separate subplots
   plt.close()
   plt.figure(figsize=(10, 8))
 
-  # Plot for x1
+  # Plot for xa
   plt.subplot(211)
-  plt.plot(sol.t, sol.x1 + sol.x2, label=r'$x_+$', color='b')
+  plt.plot(sol.t, sol.xa + sol.xb, label=r'$x_+$', color='b')
   plt.ylabel('x+ (m)')
   plt.title('Coupled Oscillator Simulation')
   plt.legend(loc='upper right')
   plt.grid(True)
 
-  # Plot for x2
+  # Plot for xb
   plt.subplot(212, sharex=plt.gca())
-  plt.plot(sol.t, sol.x1 - sol.x2, label=r'$x_-$', color='r')
+  plt.plot(sol.t, sol.xa - sol.xb, label=r'$x_-$', color='r')
   plt.xlabel('Time (s)')
   plt.ylabel('x- (m)')
   plt.legend(loc='upper right')
@@ -190,8 +200,11 @@ def splotn(name:str|None, sol:Simulation)->None:
   plt.tight_layout()
   if name is None:
     plt.show()
+    return None
   else:
-    plt.savefig(f"img/mechanical-bloch-f1-{name}.png")
+    f = f"img/mechanical-bloch-f1-{name}.png"
+    plt.savefig(f)
+    return f
 
 # coupled_oscillators("1", 0.01, 0.01)
 # coupled_oscillators("2", 0.01, -0.01)

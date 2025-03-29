@@ -12,4 +12,6 @@ else
   exit 1
 fi
 
-sed -n "/$B/,/$E/{ /$B/b; /$E/b; p; }" | sed -e :a -e '/^\n*$/{$d;N;ba' -e '}' | sed '/./,$!d'
+sed -n "/$B/,/$E/{ /$B/b; /$E/b; p; }" | \
+sed -e :a -e '/^\n*$/{$d;N;ba' -e '}' | \
+sed '/./,$!d'

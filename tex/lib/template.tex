@@ -59,7 +59,8 @@ pdfdetach -saveall !DESTFILE!
 gpg --verify !GPGSIGFILE! !SOURCEFILE!
 \end{sh}
 
-You can access the author's public GPG keys as follows:
+To verify signatures, GPG requires the author's public keys. These keys should typically be acquired
+from external sources. Below, we suggest some options.
 
 \ls Sergei Mironov: \t{curl https://github.com/sergei-mironov.gpg | gpg --import}.
 \le
