@@ -390,19 +390,17 @@ We create the problem instance, run the simulation and plot the normal mode coor
   from mechanical_bloch import *
   p = OscProblem()
   s = coupled_detuned_oscillators(p)
-  fig = splotn("dosc", s)
+  fig1 = splotn("dosc", s)
   \end{python}
 
   \begin{comment}
   \begin{result}
-  Cannot install event loop hook for "qt" when running with `--simple-prompt`.
-  NOTE: Tk is supported natively; use Tk apps and Tk backends with `--simple-prompt`.
   \end{result}
   \end{comment}
 
 \begin{figure}[h!]
   \centering
-  \includegraphics[width=0.8\textwidth]{\linline{fig}{img/mechanical-bloch-f1-dosc.png}}
+  \includegraphics[width=0.8\textwidth]{\linline{fig1}{img/mechanical-bloch-f1-dosc.png}}
   \caption{This is a mock description of the figure illustrating the mechanical Bloch system.}
   \label{fig:mechanical_bloch}
 \end{figure}
@@ -417,7 +415,7 @@ We create the problem instance, run the simulation and plot the normal mode coor
   s = Schedule([(10, 10*pi)])
   # s = Schedule([])
   sim = coupled_detuned_oscillators_p(p,s,i)
-  fig = splotn("dosc2", sim)
+  fig2 = splotn("dosc2", sim)
   \end{python}
 
   \begin{comment}
@@ -427,7 +425,7 @@ We create the problem instance, run the simulation and plot the normal mode coor
 
 \begin{figure}[h!]
   \centering
-  \includegraphics[width=0.8\textwidth]{\linline{fig}{img/mechanical-bloch-f1-dosc2.png}}
+  \includegraphics[width=0.8\textwidth]{\linline{fig2}{img/mechanical-bloch-f1-dosc2.png}}
   \caption{This is a mock description of the figure illustrating the mechanical Bloch system.}
   \label{fig:mechanical_bloch}
 \end{figure}
