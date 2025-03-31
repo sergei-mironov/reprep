@@ -18,20 +18,6 @@
 \newcommand{\br}[0]{\overline{b}(t)}
 
 
-\section{Setup}
-
-
-\begin{python}
-import pennylane as qml
-import numpy as np
-import matplotlib.pyplot as plt
-\end{python}
-
-\begin{comment}
-\begin{result}
-\end{result}
-\end{comment}
-
 \newpage
 
 \section{Following the paper}
@@ -39,6 +25,21 @@ import matplotlib.pyplot as plt
 \ls \tcite{Frimmer_2014}.
 \li \tcite{smith2010waves}.
 \le
+
+\begin{comment}
+\begin{python}
+%load_ext autoreload
+%autoreload 2
+# import pennylane as qml
+import numpy as np
+import matplotlib.pyplot as plt
+\end{python}
+
+\begin{result}
+The autoreload extension is already loaded. To reload it, use:
+  %reload_ext autoreload
+\end{result}
+\end{comment}
 
 \begin{center}
   \includegraphics[width=0.6\textwidth]{img/osc.png}
@@ -350,34 +351,35 @@ The main algorithm:
   \begin{comment}
     \begin{sh}
     printf '\\begin{%s}\n' 'python'
-    cat $PROJECT_ROOT/python/mechanical_bloch.py | sedlines.sh coupled_detuned_oscillators
+    cat $PROJECT_ROOT/python/mechanical_bloch.py | sedlines.sh scheduled_coupled_detuned_oscillators
     printf '\\end{%s}\n' 'python'
     \end{sh}
   \end{comment}
 
   %result
   \begin{python}
-  def coupled_detuned_oscillators(p:OscProblem, xa0=0.01, xb0=0.01, va0=0.0, vb0=0.0)->Simulation:
+  def scheduled_coupled_detuned_oscillators(p:OscProblem, s:Schedule, i:Initials)->Simulation:
     """ Coupled oscillators with periodic detuning, as described in the paper "The Classical Bloch
     Equations". The function builds and sovles the system of ODEs corresponding to the problem.
     """
+    xa0, va0, xb0, vb0 = list(i.__dict__.values())
     m, k, K, *_ = list(p.__dict__.values())
-    sigma02, A, wdrive = p.sigma02, p.A, p.wdrive
+    sigma02, A = p.sigma02, p.A
     sigma0 = sqrt(sigma02)
     nt = 1000
     t_span = (0, 90)
     t_eval = np.linspace(t_span[0], t_span[1], nt)
     state0 = [xa0, va0, xb0, vb0]
-
+  
     def _ode(t, state):
       xa, va, xb, vb = state
-      dk = -2.0 * sigma0 * m * A * cos(wdrive * t)
+      dk = -2.0 * sigma0 * m * A * cos(p.wdrive * t) if within(t, s.wdrive) else 0.0
       dxadt = va
       dxbdt = vb
       dvadt = - xa * ((k + K) / m - dk / m) + xb * (K / m)
       dvbdt = - xb * ((k + K) / m + dk / m) + xa * (K / m)
       return [dxadt, dvadt, dxbdt, dvbdt]
-
+  
     solution = solve_ivp(_ode, t_span, state0, t_eval=t_eval)
     return Simulation(solution.t, *[np.array(x) for x in solution.y])
   \end{python}
@@ -388,9 +390,12 @@ We create the problem instance, run the simulation and plot the normal mode coor
 
   \begin{python}
   from mechanical_bloch import *
+  from math import pi
   p = OscProblem()
-  s = coupled_detuned_oscillators(p)
-  fig1 = splotn("dosc", s)
+  s = Schedule([(0,100*pi)])
+  i = Initials()
+  sim = scheduled_coupled_detuned_oscillators(p, s, i)
+  fig1 = splotn("dosc", sim)
   \end{python}
 
   \begin{comment}
@@ -406,15 +411,13 @@ We create the problem instance, run the simulation and plot the normal mode coor
 \end{figure}
 
 
-
   \begin{python}
   from mechanical_bloch import *
   from math import pi
   p = OscProblem()
   i = Initials()
   s = Schedule([(10, 10*pi)])
-  # s = Schedule([])
-  sim = coupled_detuned_oscillators_p(p,s,i)
+  sim = scheduled_coupled_detuned_oscillators(p,s,i)
   fig2 = splotn("dosc2", sim)
   \end{python}
 
@@ -429,3 +432,125 @@ We create the problem instance, run the simulation and plot the normal mode coor
   \caption{This is a mock description of the figure illustrating the mechanical Bloch system.}
   \label{fig:mechanical_bloch}
 \end{figure}
+
+
+\section{Discussion}
+
+\begin{ai}
+Can you think of any Python libraries for plotting Bloch spherese?
+\end{ai}
+
+\begin{airesult}
+Yes, there are specialized libraries in Python designed to handle quantum mechanics and quantum
+computing which include functionality for plotting Bloch spheres. Here are two notable ones:
+
+\begin{itemize}
+  \item \textbf{QuTiP (Quantum Toolbox in Python)}: QuTiP is a comprehensive quantum computing
+library. It offers tools for simulating quantum systems, and its visualization module includes
+functions for plotting Bloch spheres. You can create animated Bloch spheres and visualize quantum
+states using this library.
+    \vsp
+    QuTiP can be installed using:
+    \begin{verbatim}
+    pip install qutip
+    \end{verbatim}
+
+  \item \textbf{Qiskit}: Qiskit is an open-source framework for working with quantum circuits and
+executing them on quantum computers. The library provides a visualization module called
+`qiskit.visualization` for a variety of purposes, including plotting Bloch vectors on Bloch spheres.
+    \vsp
+    Qiskit can be installed using:
+    \begin{verbatim}
+    pip install qiskit
+    \end{verbatim}
+
+  \vsp
+\end{itemize}
+
+Both libraries are robust and facilitate the plotting and animation of quantum states, including
+Bloch spheres, in addition to providing extensive functionality for simulating and executing quantum
+algorithms.
+\end{airesult}
+
+
+\begin{ai}
+Please print me a similar program using Qutip?
+\end{ai}
+
+\begin{airesult}
+Certainly! Below is an example program using the QuTiP library to plot a Bloch sphere with a random
+vector:
+
+\vsp
+
+Make sure you have QuTiP installed in your Python environment with:
+\begin{verbatim}
+pip install qutip
+\end{verbatim}
+
+This code generates a random vector on the Bloch sphere and uses QuTiP's \verb|Bloch| class to
+visualize
+it. QuTiP's \verb|Bloch| object has functions to manipulate and display the sphere, and
+\verb|add_vectors| is
+used here to include the randomly generated vector. You can further customize the sphere's
+appearance using additional methods and properties provided by the \verb|Bloch| class.
+\end{airesult}
+
+
+  \begin{python}
+  plt.close("all")
+  import numpy as np
+  from qutip import Bloch
+
+  # Function to generate a random vector on the sphere
+  def random_bloch_vector():
+      phi = np.random.uniform(0, 2 * np.pi)
+      theta = np.random.uniform(0, np.pi)
+      x = np.sin(theta) * np.cos(phi)
+      y = np.sin(theta) * np.sin(phi)
+      z = np.cos(theta)
+      return x, y, z
+
+  # Generate a random Bloch vector
+  x, y, z = random_bloch_vector()
+
+  # Set up the Bloch sphere
+  b = Bloch()
+
+  # Clear default annotations
+  # b.point_marker = ['o']  # Reset to avoid default markers
+  # b.point_color = []      # Clear default point colors
+  # b.point_size = []       # Clear default point sizes
+
+  # Name the sphere poles as A and B
+  b.zlabel = ['$A$', '$B$']
+
+  # Add the random vector to the Bloch sphere
+  b.add_vectors([x, y, z])
+  b.vector_width = 5  # Linewidth for axes
+
+  # Plot the Bloch sphere
+  b.show()
+
+  # Save the plot to a file (optional)
+  b.fig.savefig("img/bloch-example2.png")
+  \end{python}
+
+  % In this version, I've cleared default annotations by resetting the point_marker, point_color,
+  % and point_size attributes to ensure only the custom annotations you added, 'A' and 'B', are
+  % present.
+
+  % In this version, I've removed the plt.savefig line as it was not needed when using QuTiP's Bloch
+  % class.  Instead, the Bloch class provides its own method to save figures using b.fig.savefig.
+
+  \begin{result}
+  <Figure size 500x500 with 1 Axes>
+  \end{result}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=0.5\textwidth]{img/bloch-example2.png}
+  \caption{This is a mock description of the figure illustrating the mechanical Bloch system.}
+  \label{fig:mechanical_bloch}
+\end{figure}
+

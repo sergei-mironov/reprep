@@ -6,8 +6,8 @@ import numpy as np
 from numpy import ndarray
 from scipy.integrate import solve_ivp
 import matplotlib.pyplot as plt
-from dataclasses import dataclass
-from math import sqrt, cos
+from dataclasses import dataclass, field
+from math import sqrt, cos, exp
 
 @dataclass
 class PendulumProblem:
@@ -20,11 +20,20 @@ class PendulumProblem:
 
 @dataclass
 class Simulation:
-  t:ndarray   # Time ticks
-  xa:ndarray  # Positions of the 1st bob
-  va:ndarray  # Velocities of the 1st bob
-  xb:ndarray  # Positions of the 2nd bob
-  vb:ndarray  # Velocities of the 2nd bob
+  t:ndarray                # Time ticks
+  xa:ndarray               # Positions of the 1st bob
+  va:ndarray               # Velocities of the 1st bob
+  xb:ndarray               # Positions of the 2nd bob
+  vb:ndarray               # Velocities of the 2nd bob
+  xp:ndarray|None = None   # (+) mode coordinates
+  xm:ndarray|None = None   # (-) mode coordinates
+  xpA:ndarray|None = None  # (+) mode amplitudes
+  xmA:ndarray|None = None  # (i) mode amplitudes
+  def __post_init__(self):
+    if self.xp is None:
+      self.xp = self.xa + self.xb
+    if self.xm is None:
+      self.xm = self.xa - self.xb
 
 # }}} Simulation
 
@@ -32,14 +41,30 @@ class Simulation:
 
 Time = float
 
-@dataclass
+DriveEnabled = list[tuple[Time,Time]]
+
 class Schedule:
   """ Encodes time intervals when the w_drive signal is enabled. """
-  wdrive:list[tuple[Time,Time]]
+  drive:DriveEnabled
+  time:ndarray
+  tspan:tuple[Time,Time]
+
+  def __init__(self, drive:DriveEnabled|None=None):
+    nt = 1000
+    self.tspan = (0, 90)
+    self.time = np.linspace(self.tspan[0], self.tspan[1], nt)
+    self.drive = drive if drive is not None else [(0.0,float('inf'))]
+
+@dataclass
+class Initials:
+  xa0 :float = 0.01
+  va0 :float = 0.0
+  xb0 :float = 0.01
+  vb0 :float = 0.0
 
 # }}} Schedule
 
-def coupled_pendulums(p:PendulumProblem, xa0=0.01, xb0=0.01, va0=0.0, vb0=0.0) -> Simulation:
+def coupled_pendulums(p:PendulumProblem, s:Schedule, i:Initials) -> Simulation:
   """ Coupled pendulums without detuning. As described in "Waves and Oscillations. Prelude to
   Quantum Mechanincs".
 
@@ -52,6 +77,7 @@ def coupled_pendulums(p:PendulumProblem, xa0=0.01, xb0=0.01, va0=0.0, vb0=0.0) -
 
   # Constants
   m, l, k, g = list(p.__dict__.values())
+  xa0, va0, xb0, vb0 = list(i.__dict__.values())
 
   # System of equations
   def _ode(t, y):
@@ -62,15 +88,11 @@ def coupled_pendulums(p:PendulumProblem, xa0=0.01, xb0=0.01, va0=0.0, vb0=0.0) -
     dvbdt = -(g / l) * xb - (k / m) * (xb - xa)
     return [dxadt, dvadt, dxbdt, dvbdt]
 
-  # Time span for the simulation
-  t_span = (0, 10)  # simulate from t=0 to t=10 seconds
-  t_eval = np.linspace(t_span[0], t_span[1], 1000)  # time points to evaluate at
-
   # Initial state vector
   y0 = [xa0, va0, xb0, vb0]
 
   # Solve the system of ODEs
-  solution = solve_ivp(_ode, t_span, y0, t_eval=t_eval)
+  solution = solve_ivp(_ode, s.tspan, y0, t_eval=s.time)
   return Simulation(solution.t, *[np.array(x) for x in solution.y])
 
 
@@ -91,14 +113,15 @@ class OscProblem:
 
 # }}} OscProblem
 
-def coupled_oscillators(p:OscProblem, xa0=0.01, xb0=0.01, va0=0.0, vb0=0.0)->Simulation:# {{{
-  """ Coupled oscillators with periodic detuning, as described in the paper "The Classical Bloch
+# {{{ coupled_oscillators
+
+def coupled_oscillators(p:OscProblem, s:Schedule, i:Initials)->Simulation:
+  """ Solve the Coupled oscillators without detuning, as described in the paper "The Classical Bloch
   Equations".
   """
   # Constants
   m, k, K, *_ = list(p.__dict__.values())
-
-  nt = 1000 # number of time points to evaluate at
+  xa0, va0, xb0, vb0 = list(i.__dict__.values())
 
   # System of equations
   def _ode(t, state):
@@ -109,83 +132,74 @@ def coupled_oscillators(p:OscProblem, xa0=0.01, xb0=0.01, va0=0.0, vb0=0.0)->Sim
     dvbdt = - xb * ((k + K) / m) + xa * (K / m)
     return [dxadt, dvadt, dxbdt, dvbdt]
 
-  # Time span for the simulation
-  t_span = (0, 10)  # simulate from t=0 to t=10 seconds
-  t_eval = np.linspace(t_span[0], t_span[1], nt)
-
   # Initial state vector
   state0 = [xa0, va0, xb0, vb0]
 
   # Solve the system of ODEs
-  solution = solve_ivp(_ode, t_span, state0, t_eval=t_eval)
+  solution = solve_ivp(_ode, s.tspan, state0, t_eval=s.time)
   return Simulation(solution.t, *[np.array(x) for x in solution.y])
+
 # }}}
 
-# {{{ coupled_detuned_oscillators
-
-def coupled_detuned_oscillators(p:OscProblem, xa0=0.01, xb0=0.01, va0=0.0, vb0=0.0)->Simulation:
-  """ Coupled oscillators with periodic detuning, as described in the paper "The Classical Bloch
-  Equations". The function builds and sovles the system of ODEs corresponding to the problem.
-  """
-  m, k, K, *_ = list(p.__dict__.values())
-  sigma02, A, wdrive = p.sigma02, p.A, p.wdrive
-  sigma0 = sqrt(sigma02)
-  nt = 1000
-  t_span = (0, 90)
-  t_eval = np.linspace(t_span[0], t_span[1], nt)
-  state0 = [xa0, va0, xb0, vb0]
-
-  def _ode(t, state):
-    xa, va, xb, vb = state
-    dk = -2.0 * sigma0 * m * A * cos(wdrive * t)
-    dxadt = va
-    dxbdt = vb
-    dvadt = - xa * ((k + K) / m - dk / m) + xb * (K / m)
-    dvbdt = - xb * ((k + K) / m + dk / m) + xa * (K / m)
-    return [dxadt, dvadt, dxbdt, dvbdt]
-
-  solution = solve_ivp(_ode, t_span, state0, t_eval=t_eval)
-  return Simulation(solution.t, *[np.array(x) for x in solution.y])
-
-# }}} coupled_detuned_oscillators
-
-@dataclass
-class Initials:
-  xa0 :float = 0.01
-  va0 :float = 0.0
-  xb0 :float = 0.01
-  vb0 :float = 0.0
-
-def within(t:Time, sched) -> bool:
+def within(t:Time, sched:DriveEnabled) -> bool:
   for seg in sched:
     if seg[0] <= t < seg[0]+seg[1]:
       return True
   return False
 
-def coupled_detuned_oscillators_p(p:OscProblem, s:Schedule, i:Initials)->Simulation:
-  """ Coupled oscillators with periodic detuning, as described in the paper "The Classical Bloch
-  Equations". The function builds and sovles the system of ODEs corresponding to the problem.
+# {{{ scheduled_coupled_detuned_oscillators
+
+def scheduled_coupled_detuned_oscillators(p:OscProblem, s:Schedule, i:Initials)->Simulation:
+  """ Solve the Coupled oscillators problem with detuning, as described in the "The Classical Bloch
+  Equations" paper. Assume that detuning drive signal is enabled according to the schedule `s`.
   """
   xa0, va0, xb0, vb0 = list(i.__dict__.values())
   m, k, K, *_ = list(p.__dict__.values())
   sigma02, A = p.sigma02, p.A
   sigma0 = sqrt(sigma02)
-  nt = 1000
-  t_span = (0, 90)
-  t_eval = np.linspace(t_span[0], t_span[1], nt)
   state0 = [xa0, va0, xb0, vb0]
 
   def _ode(t, state):
     xa, va, xb, vb = state
-    dk = -2.0 * sigma0 * m * A * cos(p.wdrive * t) if within(t, s.wdrive) else 0.0
+    dk = -2.0 * sigma0 * m * A * cos(p.wdrive * t) if within(t, s.drive) else 0.0
     dxadt = va
     dxbdt = vb
     dvadt = - xa * ((k + K) / m - dk / m) + xb * (K / m)
     dvbdt = - xb * ((k + K) / m + dk / m) + xa * (K / m)
     return [dxadt, dvadt, dxbdt, dvbdt]
 
-  solution = solve_ivp(_ode, t_span, state0, t_eval=t_eval)
+  solution = solve_ivp(_ode, s.tspan, state0, t_eval=s.time)
   return Simulation(solution.t, *[np.array(x) for x in solution.y])
+
+# }}} scheduled_coupled_detuned_oscillators
+
+def coupled_detuned_oscillator_amplitudes(p:OscProblem, s:Schedule, i:Initials)->tuple[ndarray, ndarray]:
+  t = s.time
+  a0 = i.xa0 + i.xb0
+  b0 = i.xa0 - i.xb0
+  a_ = a0 * np.cos((p.A/2.0) * t) + 1j * b0 * np.sin((p.A/2.0) * t)
+  b_ = b0 * np.cos((p.A/2.0) * t) + 1j * a0 * np.sin((p.A/2.0) * t)
+  a = a_ * np.exp(-1j * (p.wdrive/2.0) * t)
+  b = b_ * np.exp(+1j * (p.wdrive/2.0) * t)
+  xp = a * np.exp(1j * np.sqrt(p.sigma02) * t)
+  xm = b * np.exp(1j * np.sqrt(p.sigma02) * t)
+  return np.abs(xp), np.abs(xm)
+
+# {{{ coupled_detuned_oscillators
+
+def coupled_detuned_oscillators_vs_amplitudes(p:OscProblem, i:Initials)->Simulation:
+  """ Solve the coupled detuned oscillators problem numerically, set the normal mode amplitudes
+  using theoretic solution (see the "Mechanical Bloch Equations" paper). Assume the detuning drive
+  signal is always enabled.
+  """
+  s = Schedule()
+  sim = scheduled_coupled_detuned_oscillators(p, s, i)
+  sim.xpA, sim.xmA = coupled_detuned_oscillator_amplitudes(p, s, i)
+  return sim
+
+# }}} coupled_detuned_oscillators
+
+
 
 def splot(name:str|None, sol:Simulation)->None:# {{{
   # Plot the results on separate subplots
@@ -221,7 +235,9 @@ def splotn(name:str|None, sol:Simulation)->str|None:
 
   # Plot for xa
   plt.subplot(211)
-  plt.plot(sol.t, sol.xa + sol.xb, label=r'$x_+$', color='b')
+  plt.plot(sol.t, sol.xp, label=r'$x_+$', color='b')
+  if sol.xpA is not None:
+    plt.plot(sol.t, sol.xpA, label=r'$|x_+|$', color='g')
   plt.ylabel('x+ (m)')
   plt.title('Coupled Oscillator Simulation')
   plt.legend(loc='upper right')
@@ -229,7 +245,9 @@ def splotn(name:str|None, sol:Simulation)->str|None:
 
   # Plot for xb
   plt.subplot(212, sharex=plt.gca())
-  plt.plot(sol.t, sol.xa - sol.xb, label=r'$x_-$', color='r')
+  plt.plot(sol.t, sol.xm, label=r'$x_-$', color='r')
+  if sol.xmA is not None:
+    plt.plot(sol.t, sol.xmA, label=r'$|x_-|$', color='g')
   plt.xlabel('Time (s)')
   plt.ylabel('x- (m)')
   plt.legend(loc='upper right')
