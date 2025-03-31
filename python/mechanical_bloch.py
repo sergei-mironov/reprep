@@ -27,8 +27,6 @@ class Simulation:
   vb:ndarray               # Velocities of the 2nd bob
   xp:ndarray|None = None   # (+) mode coordinates
   xm:ndarray|None = None   # (-) mode coordinates
-  xpA:ndarray|None = None  # (+) mode amplitudes
-  xmA:ndarray|None = None  # (i) mode amplitudes
   def __post_init__(self):
     if self.xp is None:
       self.xp = self.xa + self.xb
@@ -40,20 +38,21 @@ class Simulation:
 # {{{ Schedule
 
 Time = float
-
-DriveEnabled = list[tuple[Time,Time]]
+DriveEnabled = list[tuple[Time,Time]]  # [(Start, Duration)]
 
 class Schedule:
-  """ Encodes time intervals when the w_drive signal is enabled. """
-  drive:DriveEnabled
-  time:ndarray
-  tspan:tuple[Time,Time]
+  """ Encodes the time input parameters. """
+  tspan:tuple[Time,Time]   # Overall simulation time span, (Start, Stop).
+  time:ndarray             # Time points within the simulation time span.
+  drive:DriveEnabled       # Time segments when `wdrive` signal is enabled.
 
   def __init__(self, drive:DriveEnabled|None=None):
     nt = 1000
     self.tspan = (0, 90)
     self.time = np.linspace(self.tspan[0], self.tspan[1], nt)
     self.drive = drive if drive is not None else [(0.0,float('inf'))]
+
+# }}} Schedule
 
 @dataclass
 class Initials:
@@ -62,7 +61,6 @@ class Initials:
   xb0 :float = 0.01
   vb0 :float = 0.0
 
-# }}} Schedule
 
 def coupled_pendulums(p:PendulumProblem, s:Schedule, i:Initials) -> Simulation:
   """ Coupled pendulums without detuning. As described in "Waves and Oscillations. Prelude to
@@ -143,7 +141,7 @@ def coupled_oscillators(p:OscProblem, s:Schedule, i:Initials)->Simulation:
 
 def within(t:Time, sched:DriveEnabled) -> bool:
   for seg in sched:
-    if seg[0] <= t < seg[0]+seg[1]:
+    if seg[0] <= t and t < seg[0]+seg[1]:
       return True
   return False
 
@@ -172,8 +170,10 @@ def scheduled_coupled_detuned_oscillators(p:OscProblem, s:Schedule, i:Initials)-
   return Simulation(solution.t, *[np.array(x) for x in solution.y])
 
 # }}} scheduled_coupled_detuned_oscillators
+# {{{ coupled_detuned_oscillator_theoretic
 
-def coupled_detuned_oscillator_amplitudes(p:OscProblem, s:Schedule, i:Initials)->tuple[ndarray, ndarray]:
+def coupled_detuned_oscillator_theoretic(p:OscProblem, s:Schedule, i:Initials)->Simulation:
+  assert s.drive and s.drive[0] == (0.0, float('inf'))
   t = s.time
   a0 = i.xa0 + i.xb0
   b0 = i.xa0 - i.xb0
@@ -183,19 +183,20 @@ def coupled_detuned_oscillator_amplitudes(p:OscProblem, s:Schedule, i:Initials)-
   b = b_ * np.exp(+1j * (p.wdrive/2.0) * t)
   xp = a * np.exp(1j * np.sqrt(p.sigma02) * t)
   xm = b * np.exp(1j * np.sqrt(p.sigma02) * t)
-  return np.abs(xp), np.abs(xm)
+  return Simulation(t, None, None, None, None, xp=xp, xm=xm)
 
+# }}} coupled_detuned_oscillator_theoretic
 # {{{ coupled_detuned_oscillators
 
-def coupled_detuned_oscillators_vs_amplitudes(p:OscProblem, i:Initials)->Simulation:
+def coupled_detuned_oscillators_vs_theoretic(p:OscProblem, i:Initials)->Simulation:
   """ Solve the coupled detuned oscillators problem numerically, set the normal mode amplitudes
   using theoretic solution (see the "Mechanical Bloch Equations" paper). Assume the detuning drive
   signal is always enabled.
   """
   s = Schedule()
   sim = scheduled_coupled_detuned_oscillators(p, s, i)
-  sim.xpA, sim.xmA = coupled_detuned_oscillator_amplitudes(p, s, i)
-  return sim
+  sim_ref = coupled_detuned_oscillator_theoretic(p, s, i)
+  return sim, sim_ref
 
 # }}} coupled_detuned_oscillators
 
@@ -228,16 +229,16 @@ def splot(name:str|None, sol:Simulation)->None:# {{{
     plt.savefig(f"img/mechanical-bloch-f1-{name}.png")
 # }}}
 
-def splotn(name:str|None, sol:Simulation)->str|None:
+def splotn(name:str|None, sol:Simulation, sol_ref:Simulation|None=None)->str|None:
   # Plot the results on separate subplots
   plt.close()
   plt.figure(figsize=(10, 8))
 
   # Plot for xa
   plt.subplot(211)
-  plt.plot(sol.t, sol.xp, label=r'$x_+$', color='b')
-  if sol.xpA is not None:
-    plt.plot(sol.t, sol.xpA, label=r'$|x_+|$', color='g')
+  plt.plot(sol.t, np.real(sol.xp), label=r'Numeric $x_+$', color='b')
+  if sol_ref is not None:
+    plt.plot(sol_ref.t, np.abs(sol_ref.xp), label=r'Theoretic $|x_+|$', color='g')
   plt.ylabel('x+ (m)')
   plt.title('Coupled Oscillator Simulation')
   plt.legend(loc='upper right')
@@ -245,9 +246,9 @@ def splotn(name:str|None, sol:Simulation)->str|None:
 
   # Plot for xb
   plt.subplot(212, sharex=plt.gca())
-  plt.plot(sol.t, sol.xm, label=r'$x_-$', color='r')
-  if sol.xmA is not None:
-    plt.plot(sol.t, sol.xmA, label=r'$|x_-|$', color='g')
+  plt.plot(sol.t, sol.xm, label=r'Numeric $x_-$', color='r')
+  if sol_ref is not None:
+    plt.plot(sol_ref.t, np.abs(sol_ref.xm), label=r'Theoretic $|x_-|$', color='g')
   plt.xlabel('Time (s)')
   plt.ylabel('x- (m)')
   plt.legend(loc='upper right')

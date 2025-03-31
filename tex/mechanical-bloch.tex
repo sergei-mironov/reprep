@@ -141,14 +141,15 @@ and $\xm = x_a - x_b$.  Then we add and subtract equations from \ref{main} to ge
 \end{equation}
 
 
-We continue with this almost-diagonal matrix. Assume the solutions in form of:
+We continue with this almost-diagonal matrix. Assume the solutions of the following form:
 
-\[
+\begin{equation}
   \begin{cases}
     x_+ = a(t)e^{i\Omega_0 t} \\
     x_- = b(t)e^{i\Omega_0 t}
   \end{cases}
-\]
+  \label{sol}
+\end{equation}
 
 where $a(t)$ and $b(t)$ are complex amplitudes. We put these forms into \ref{normal}, calculate the
 second derivatives and apply the following simplifications:
@@ -300,8 +301,39 @@ detuning. First we define the Python dataclass describing the detuned ascillator
   %noresult
 
 
-We represent the results of the simulation with the arrays of timed values of $x_a$, $x_b$ and the
-corresponding speeds
+We represent the time-specific input parameters in a separate structure.
+
+  \begin{comment}
+    \begin{sh}
+    printf '\\begin{%s}\n' 'python'
+    cat $PROJECT_ROOT/python/mechanical_bloch.py | sedlines.sh Schedule
+    printf '\\end{%s}\n' 'python'
+    \end{sh}
+  \end{comment}
+
+  %result
+  \begin{python}
+  Time = float
+  
+  DriveEnabled = list[tuple[Time,Time]]
+  
+  class Schedule:
+    """ Encodes the time input parameters. """
+    tspan:tuple[Time,Time]   # Overall simulation time span.
+    time:ndarray             # Time points within the span.
+    drive:DriveEnabled       # Time segments when `wdrive` signal is enabled.
+  
+    def __init__(self, drive:DriveEnabled|None=None):
+      nt = 1000
+      self.tspan = (0, 90)
+      self.time = np.linspace(self.tspan[0], self.tspan[1], nt)
+      self.drive = drive if drive is not None else [(0.0,float('inf'))]
+  \end{python}
+  %noresult
+
+
+We represent results of the simulation as the arrays of values encoding $x_a$, $x_b$, their
+speeds and optional normal modes.
 
 
   \begin{comment}
@@ -316,37 +348,23 @@ corresponding speeds
   \begin{python}
   @dataclass
   class Simulation:
-    t:ndarray   # Time ticks
-    xa:ndarray  # Positions of the 1st bob
-    va:ndarray  # Velocities of the 1st bob
-    xb:ndarray  # Positions of the 2nd bob
-    vb:ndarray  # Velocities of the 2nd bob
+    t:ndarray                # Time ticks
+    xa:ndarray               # Positions of the 1st bob
+    va:ndarray               # Velocities of the 1st bob
+    xb:ndarray               # Positions of the 2nd bob
+    vb:ndarray               # Velocities of the 2nd bob
+    xp:ndarray|None = None   # (+) mode coordinates
+    xm:ndarray|None = None   # (-) mode coordinates
+    def __post_init__(self):
+      if self.xp is None:
+        self.xp = self.xa + self.xb
+      if self.xm is None:
+        self.xm = self.xa - self.xb
   \end{python}
   %noresult
 
-To make the problem more illustrative, we encode a schedule of enabling the drive signal
-
-  \begin{comment}
-    \begin{sh}
-    printf '\\begin{%s}\n' 'python'
-    cat $PROJECT_ROOT/python/mechanical_bloch.py | sedlines.sh Schedule
-    printf '\\end{%s}\n' 'python'
-    \end{sh}
-  \end{comment}
-
-  %result
-  \begin{python}
-  Time = float
-
-  @dataclass
-  class Schedule:
-    """ Encodes time intervals when the w_drive signal is enabled. """
-    wdrive:list[tuple[Time,Time]]
-  \end{python}
-  %noresult
-
-
-The main algorithm:
+We want to compare the results of the direct simulation of (\ref{main}) with the values predicted by
+(\ref{sol}). The former is made using \verb|solve_ivp|.
 
   \begin{comment}
     \begin{sh}
@@ -359,46 +377,69 @@ The main algorithm:
   %result
   \begin{python}
   def scheduled_coupled_detuned_oscillators(p:OscProblem, s:Schedule, i:Initials)->Simulation:
-    """ Coupled oscillators with periodic detuning, as described in the paper "The Classical Bloch
-    Equations". The function builds and sovles the system of ODEs corresponding to the problem.
+    """ Solve the Coupled oscillators problem with detuning, as described in the "The Classical Bloch
+    Equations" paper. Assume that detuning drive signal is enabled according to the schedule `s`.
     """
     xa0, va0, xb0, vb0 = list(i.__dict__.values())
     m, k, K, *_ = list(p.__dict__.values())
     sigma02, A = p.sigma02, p.A
     sigma0 = sqrt(sigma02)
-    nt = 1000
-    t_span = (0, 90)
-    t_eval = np.linspace(t_span[0], t_span[1], nt)
     state0 = [xa0, va0, xb0, vb0]
   
     def _ode(t, state):
       xa, va, xb, vb = state
-      dk = -2.0 * sigma0 * m * A * cos(p.wdrive * t) if within(t, s.wdrive) else 0.0
+      dk = -2.0 * sigma0 * m * A * cos(p.wdrive * t) if within(t, s.drive) else 0.0
       dxadt = va
       dxbdt = vb
       dvadt = - xa * ((k + K) / m - dk / m) + xb * (K / m)
       dvbdt = - xb * ((k + K) / m + dk / m) + xa * (K / m)
       return [dxadt, dvadt, dxbdt, dvbdt]
   
-    solution = solve_ivp(_ode, t_span, state0, t_eval=t_eval)
+    solution = solve_ivp(_ode, s.tspan, state0, t_eval=s.time)
     return Simulation(solution.t, *[np.array(x) for x in solution.y])
+  \end{python}
+  %noresult
+
+The latter is calculated using Numpy directly:
+
+  \begin{comment}
+    \begin{sh}
+    printf '\\begin{%s}\n' 'python'
+    cat $PROJECT_ROOT/python/mechanical_bloch.py | sedlines.sh coupled_detuned_oscillator_theoretic
+    printf '\\end{%s}\n' 'python'
+    \end{sh}
+  \end{comment}
+
+  %result
+  \begin{python}
+  def coupled_detuned_oscillator_theoretic(p:OscProblem, s:Schedule, i:Initials)->Simulation:
+    assert s.drive and s.drive[0] == (0.0, float('inf'))
+    t = s.time
+    a0 = i.xa0 + i.xb0
+    b0 = i.xa0 - i.xb0
+    a_ = a0 * np.cos((p.A/2.0) * t) + 1j * b0 * np.sin((p.A/2.0) * t)
+    b_ = b0 * np.cos((p.A/2.0) * t) + 1j * a0 * np.sin((p.A/2.0) * t)
+    a = a_ * np.exp(-1j * (p.wdrive/2.0) * t)
+    b = b_ * np.exp(+1j * (p.wdrive/2.0) * t)
+    xp = a * np.exp(1j * np.sqrt(p.sigma02) * t)
+    xm = b * np.exp(1j * np.sqrt(p.sigma02) * t)
+    return Simulation(t, None, None, None, None, xp=xp, xm=xm)
   \end{python}
   %noresult
 
 
 We create the problem instance, run the simulation and plot the normal mode coordinates.
 
+  \begin{comment}
   \begin{python}
   from mechanical_bloch import *
   from math import pi
   p = OscProblem()
-  s = Schedule([(0,100*pi)])
   i = Initials()
-  sim = scheduled_coupled_detuned_oscillators(p, s, i)
-  fig1 = splotn("dosc", sim)
+  sim, sim_ref = coupled_detuned_oscillators_vs_theoretic(p, i)
+  fig1 = splotn("dosc", sim, sim_ref)
   \end{python}
 
-  \begin{comment}
   \begin{result}
   \end{result}
   \end{comment}
@@ -416,7 +457,7 @@ We create the problem instance, run the simulation and plot the normal mode coor
   from math import pi
   p = OscProblem()
   i = Initials()
-  s = Schedule([(10, 10*pi)])
+  s = Schedule([(25, 10*pi)])
   sim = scheduled_coupled_detuned_oscillators(p,s,i)
   fig2 = splotn("dosc2", sim)
   \end{python}
