@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from math import sqrt, cos, exp
 from qutip import Bloch
 
-         # PendulumProblem {{{
+# PendulumProblem {{{
 @dataclass
 class PendulumProblem:
   m:float=0.1
@@ -23,13 +23,15 @@ class PendulumProblem:
 
 @dataclass
 class Simulation:
-  t:ndarray                # Time ticks
-  xa:ndarray               # Positions of the 1st bob
-  va:ndarray               # Velocities of the 1st bob
-  xb:ndarray               # Positions of the 2nd bob
-  vb:ndarray               # Velocities of the 2nd bob
-  xp:ndarray|None = None   # (+) mode coordinates
-  xm:ndarray|None = None   # (-) mode coordinates
+  t  :ndarray               # Time ticks
+  xa :ndarray               # Positions of the 1st bob
+  va :ndarray               # Velocities of the 1st bob
+  xb :ndarray               # Positions of the 2nd bob
+  vb :ndarray               # Velocities of the 2nd bob
+  xp :ndarray|None = None   # (+)-mode coordinates
+  xm :ndarray|None = None   # (-)-mode coordinates
+  xpA:ndarray|None = None   # (+)-mode amplitudes
+  xmA:ndarray|None = None   # (-)-mode amplitudes
   def __post_init__(self):
     if self.xp is None:
       self.xp = self.xa + self.xb
@@ -73,7 +75,7 @@ class Initials:
   vb0 :float = 0.0
 # }}}
 
-def coupled_pendulums(p:PendulumProblem, s:Schedule, i:Initials) -> Simulation:# {{{
+def coupled_pendulums(p:PendulumProblem, s:Schedule, i:Initials) -> Simulation: # {{{
   """ Coupled pendulums without detuning. As described in "Waves and Oscillations. Prelude to
   Quantum Mechanincs".
 
@@ -187,7 +189,9 @@ def coupled_detuned_oscillator_theoretic(p:OscProblem, s:Schedule, i:Initials)->
   b = b_ * np.exp(+1j * (p.wdrive/2.0) * t)
   xp = a * np.exp(1j * np.sqrt(p.sigma02) * t)
   xm = b * np.exp(1j * np.sqrt(p.sigma02) * t)
-  return Simulation(t, None, None, None, None, xp=xp, xm=xm)
+  return Simulation(t, None, None, None, None,
+                    xp=np.real(xp), xm=np.real(xm),
+                    xpA=np.abs(xp), xmA=np.abs(xm))
 
 # }}} coupled_detuned_oscillator_theoretic
 # {{{ coupled_detuned_oscillators
@@ -241,9 +245,9 @@ def splotn(name:str|None, sol:Simulation, sol_ref:Simulation|None=None)->str|Non
 
   # Plot for xa
   plt.subplot(211)
-  plt.plot(sol.t, np.real(sol.xp), label=r'Numeric $x_+$', color='b')
+  plt.plot(sol.t, sol.xp, label=r'Numeric $x_+$', color='b')
   if sol_ref is not None:
-    plt.plot(sol_ref.t, np.abs(sol_ref.xp), label=r'Theoretic $|x_+|$', color='g')
+    plt.plot(sol_ref.t, sol_ref.xpA, label=r'Theoretic $|x_+|$', color='g')
   plt.ylabel('x+ (m)')
   plt.title('Coupled Oscillator Simulation')
   plt.legend(loc='upper right')
@@ -253,7 +257,7 @@ def splotn(name:str|None, sol:Simulation, sol_ref:Simulation|None=None)->str|Non
   plt.subplot(212, sharex=plt.gca())
   plt.plot(sol.t, sol.xm, label=r'Numeric $x_-$', color='r')
   if sol_ref is not None:
-    plt.plot(sol_ref.t, np.abs(sol_ref.xm), label=r'Theoretic $|x_-|$', color='g')
+    plt.plot(sol_ref.t, sol_ref.xmA, label=r'Theoretic $|x_-|$', color='g')
   plt.xlabel('Time (s)')
   plt.ylabel('x- (m)')
   plt.legend(loc='upper right')
