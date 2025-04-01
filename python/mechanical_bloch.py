@@ -8,13 +8,16 @@ from scipy.integrate import solve_ivp
 import matplotlib.pyplot as plt
 from dataclasses import dataclass, field
 from math import sqrt, cos, exp
+from qutip import Bloch
 
+         # PendulumProblem {{{
 @dataclass
 class PendulumProblem:
   m:float=0.1
   l:float=0.15
   k:float=0.5
   g:float=9.81
+# }}}
 
 # {{{ Simulation
 
@@ -54,15 +57,23 @@ class Schedule:
 
 # }}} Schedule
 
+def within(t:Time, sched:DriveEnabled) -> bool:# {{{
+  for seg in sched:
+    if seg[0] <= t and t < seg[0]+seg[1]:
+      return True
+  return False
+# }}}
+
+# class Initials {{{
 @dataclass
 class Initials:
   xa0 :float = 0.01
   va0 :float = 0.0
   xb0 :float = 0.01
   vb0 :float = 0.0
+# }}}
 
-
-def coupled_pendulums(p:PendulumProblem, s:Schedule, i:Initials) -> Simulation:
+def coupled_pendulums(p:PendulumProblem, s:Schedule, i:Initials) -> Simulation:# {{{
   """ Coupled pendulums without detuning. As described in "Waves and Oscillations. Prelude to
   Quantum Mechanincs".
 
@@ -92,7 +103,7 @@ def coupled_pendulums(p:PendulumProblem, s:Schedule, i:Initials) -> Simulation:
   # Solve the system of ODEs
   solution = solve_ivp(_ode, s.tspan, y0, t_eval=s.time)
   return Simulation(solution.t, *[np.array(x) for x in solution.y])
-
+# }}}
 
 # {{{ OscProblem
 
@@ -138,13 +149,6 @@ def coupled_oscillators(p:OscProblem, s:Schedule, i:Initials)->Simulation:
   return Simulation(solution.t, *[np.array(x) for x in solution.y])
 
 # }}}
-
-def within(t:Time, sched:DriveEnabled) -> bool:
-  for seg in sched:
-    if seg[0] <= t and t < seg[0]+seg[1]:
-      return True
-  return False
-
 # {{{ scheduled_coupled_detuned_oscillators
 
 def scheduled_coupled_detuned_oscillators(p:OscProblem, s:Schedule, i:Initials)->Simulation:
@@ -200,9 +204,10 @@ def coupled_detuned_oscillators_vs_theoretic(p:OscProblem, i:Initials)->Simulati
 
 # }}} coupled_detuned_oscillators
 
-
-
 def splot(name:str|None, sol:Simulation)->None:# {{{
+  """ Plot the simulation results, each oscialltor separately
+  """
+
   # Plot the results on separate subplots
   plt.figure(figsize=(10, 8))
 
@@ -228,10 +233,10 @@ def splot(name:str|None, sol:Simulation)->None:# {{{
   else:
     plt.savefig(f"img/mechanical-bloch-f1-{name}.png")
 # }}}
-
-def splotn(name:str|None, sol:Simulation, sol_ref:Simulation|None=None)->str|None:
-  # Plot the results on separate subplots
-  plt.close()
+def splotn(name:str|None, sol:Simulation, sol_ref:Simulation|None=None)->str|None:# {{{
+  """ Plot the coupled pendulim simulation normal mode results
+  """
+  plt.close("all")
   plt.figure(figsize=(10, 8))
 
   # Plot for xa
@@ -262,7 +267,44 @@ def splotn(name:str|None, sol:Simulation, sol_ref:Simulation|None=None)->str|Non
     f = f"img/mechanical-bloch-f1-{name}.png"
     plt.savefig(f)
     return f
+# }}}
+def splotb(name, p:OscProblem, s:Schedule, i:Initials):# {{{
+  assert s.drive and s.drive[0] == (0.0, float('inf'))
+  t = s.time
+  a0 = i.xa0 + i.xb0
+  b0 = i.xa0 - i.xb0
 
-# coupled_oscillators("1", 0.01, 0.01)
-# coupled_oscillators("2", 0.01, -0.01)
-# coupled_oscillators("3", 0.01, 0)
+  # Calculate a_ and b_ with normalization
+  a_ = a0 * np.cos((p.A / 2.0) * t) + 1j * b0 * np.sin((p.A / 2.0) * t)
+  b_ = b0 * np.cos((p.A / 2.0) * t) + 1j * a0 * np.sin((p.A / 2.0) * t)
+  norm_factor = np.sqrt(np.abs(a_)**2 + np.abs(b_)**2)
+
+  # Normalizing a_ and b_
+  a_ /= norm_factor
+  b_ /= norm_factor
+
+  # Calculate sx, sy, sz using the normalized a_ and b_
+  sx = np.real(     a_ * np.conj(b_) +      np.conj(a_) * b_ )
+  sy = np.real(1j * a_ * np.conj(b_) - 1j * np.conj(a_) * b_ )
+  sz = np.real(     a_ * np.conj(a_) -      b_ * np.conj(b_) )
+
+  # Stack sx, sy, sz into a single array with 3 rows
+  points = np.stack((sx, sy, sz))
+  print(points.shape)
+  print(points[:,:4])
+
+
+  # Set up the Bloch sphere
+  b = Bloch(view=[-40,30])
+  # Name the sphere poles as A and B
+  b.zlabel = ['$A$', '$B$']
+  b.add_points(points, 'l', 'r')
+  b.show()
+  if name is None:
+    plt.show()
+    return None
+  else:
+    f = f"img/mechanical-bloch-f1-{name}.png"
+    plt.savefig(f)
+    return f
+# }}}
