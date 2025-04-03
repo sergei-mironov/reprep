@@ -33,6 +33,7 @@
 # import pennylane as qml
 import numpy as np
 import matplotlib.pyplot as plt
+from math import pi
 \end{python}
 
 \begin{result}
@@ -288,8 +289,8 @@ detuning. First we define the Python dataclass describing the detuned ascillator
   class OscProblem:
     m:       float = 0.9   # mass in kg
     k:       float = 5     # constant for main oscillating springs
-    K:       float = 0.5   # constant for spring connecting two oscillators
-    A:       float = 0.09  # FIXME: select appropriate
+    K:       float = 0.9   # constant for spring connecting two oscillators
+    A:       float = 0.1   # amplitude of the spring constant oscillation
     sigma02: float = (k + K) / m
     sigmac2: float = K / m
     dsigma:  float = sigmac2 / sqrt(sigma02)
@@ -313,20 +314,19 @@ We represent the time-specific input parameters in a separate structure.
   %result
   \begin{python}
   Time = float
-  
-  DriveEnabled = list[tuple[Time,Time]]
+  # DriveEnabled = list[tuple[Time,Time]]  # [(Start, Duration)]
   
   class Schedule:
     """ Encodes the time input parameters. """
-    tspan:tuple[Time,Time]   # Overall simulation time span.
-    time:ndarray             # Time points within the span.
-    drive:DriveEnabled       # Time segments when `wdrive` signal is enabled.
+    tspan:tuple[Time,Time]   # Overall simulation time span, (Start, Stop).
+    time:ndarray             # Time points within the simulation time span.
+    tcutoff:Time             # Time when we turn the drive off
   
-    def __init__(self, drive:DriveEnabled|None=None):
+    def __init__(self, tcutoff:Time|None=None):
       nt = 1000
       self.tspan = (0, 90)
       self.time = np.linspace(self.tspan[0], self.tspan[1], nt)
-      self.drive = drive if drive is not None else [(0.0,float('inf'))]
+      self.tcutoff = tcutoff if tcutoff else self.tspan[1]
   \end{python}
   %noresult
 
@@ -347,13 +347,15 @@ speeds and optional normal modes.
   \begin{python}
   @dataclass
   class Simulation:
-    t:ndarray                # Time ticks
-    xa:ndarray               # Positions of the 1st bob
-    va:ndarray               # Velocities of the 1st bob
-    xb:ndarray               # Positions of the 2nd bob
-    vb:ndarray               # Velocities of the 2nd bob
-    xp:ndarray|None = None   # (+) mode coordinates
-    xm:ndarray|None = None   # (-) mode coordinates
+    t  :ndarray               # Time ticks
+    xa :ndarray               # Positions of the 1st bob
+    va :ndarray               # Velocities of the 1st bob
+    xb :ndarray               # Positions of the 2nd bob
+    vb :ndarray               # Velocities of the 2nd bob
+    xp :ndarray|None = None   # (+)-mode coordinates
+    xm :ndarray|None = None   # (-)-mode coordinates
+    xpA:ndarray|None = None   # (+)-mode amplitudes
+    xmA:ndarray|None = None   # (-)-mode amplitudes
     def __post_init__(self):
       if self.xp is None:
         self.xp = self.xa + self.xb
@@ -387,7 +389,7 @@ We want to compare the results of the direct simulation of (\ref{main}) with the
   
     def _ode(t, state):
       xa, va, xb, vb = state
-      dk = -2.0 * sigma0 * m * A * cos(p.wdrive * t) if within(t, s.drive) else 0.0
+      dk = -2.0 * sigma0 * m * A * cos(p.wdrive * t) if t<s.tcutoff else 0.0
       dxadt = va
       dxbdt = vb
       dvadt = - xa * ((k + K) / m - dk / m) + xb * (K / m)
@@ -414,7 +416,6 @@ The latter is calculated using Numpy directly:
   %result
   \begin{python}
   def coupled_detuned_oscillator_theoretic(p:OscProblem, s:Schedule, i:Initials)->Simulation:
-    assert s.drive and s.drive[0] == (0.0, float('inf'))
     t = s.time
     a0 = i.xa0 + i.xb0
     b0 = i.xa0 - i.xb0
@@ -424,14 +425,15 @@ The latter is calculated using Numpy directly:
     b = b_ * np.exp(+1j * (p.wdrive/2.0) * t)
     xp = a * np.exp(1j * np.sqrt(p.sigma02) * t)
     xm = b * np.exp(1j * np.sqrt(p.sigma02) * t)
-    return Simulation(t, None, None, None, None, xp=xp, xm=xm)
+    return Simulation(t, None, None, None, None,
+                      xp=np.real(xp), xm=np.real(xm),
+                      xpA=np.abs(xp), xmA=np.abs(xm))
   \end{python}
   %noresult
 
 
 We create the problem instance, run the simulation and plot the normal mode coordinates.
 
-  \begin{comment}
   \begin{python}
   from mechanical_bloch import *
   from math import pi
@@ -441,9 +443,8 @@ We create the problem instance, run the simulation and plot the normal mode coor
   fig1 = splotn("dosc", sim, sim_ref)
   \end{python}
 
+  \begin{comment}
   \begin{result}
-  Cannot install event loop hook for "qt" when running with `--simple-prompt`.
-  NOTE: Tk is supported natively; use Tk apps and Tk backends with `--simple-prompt`.
   \end{result}
   \end{comment}
 
@@ -462,16 +463,18 @@ We create the problem instance, run the simulation and plot the normal mode coor
   from mechanical_bloch import *
   p = OscProblem()
   i = Initials()
-  s = Schedule()
+  s = Schedule(pi/p.A)
   figB = splotb("doscB", p, s, i)
   \end{python}
 
   \begin{comment}
   \begin{result}
-  (3, 1000)
+  (3, 349)
   [[0.         0.         0.         0.        ]
-   [0.         0.00810802 0.01621551 0.02432193]
-   [1.         0.99996713 0.99986852 0.99970418]]
+   [0.         0.00900889 0.01801704 0.02702374]
+   [1.         0.99995942 0.99983768 0.99963479]]
+  Cannot install event loop hook for "qt" when running with `--simple-prompt`.
+  NOTE: Tk is supported natively; use Tk apps and Tk backends with `--simple-prompt`.
   <Figure size 500x500 with 1 Axes>
   \end{result}
   \end{comment}
@@ -491,7 +494,7 @@ We create the problem instance, run the simulation and plot the normal mode coor
   from math import pi
   p = OscProblem()
   i = Initials()
-  s = Schedule([(25, 10*pi)])
+  s = Schedule(pi/p.A)
   sim = scheduled_coupled_detuned_oscillators(p,s,i)
   fig2 = splotn("dosc2", sim)
   \end{python}
@@ -629,3 +632,33 @@ appearance using additional methods and properties provided by the \verb|Bloch| 
   \label{fig:mechanical_bloch}
 \end{figure}
 
+
+\begin{ai}
+Hi model. What is the relative phase of two complex numbers?
+\end{ai}
+
+\begin{airesult}
+The \textit{relative phase} of two complex numbers \( z_1 \) and \( z_2 \) refers to the difference
+between their respective phases (or arguments). For a complex number \( z = x + iy \), the phase (or
+argument) \(\theta\) is given by
+
+\[
+\theta = \text{arg}(z) = \tan^{-1}\left(\frac{y}{x}\right)
+\]
+
+where \( x \) and \( y \) are the real and imaginary parts of the complex number, respectively.
+
+\vsp
+
+Let \( z_1 = r_1 e^{i\theta_1} \) and \( z_2 = r_2 e^{i\theta_2} \) be the polar forms of the
+complex numbers, where \( r_1 \) and \( r_2 \) are the magnitudes and \( \theta_1 \) and \( \theta_2
+\) are the respective phases. The relative phase \(\Delta \theta\) is then given by:
+
+\[
+\Delta \theta = \theta_2 - \theta_1
+\]
+
+\vsp
+
+This measures how much one complex number is "rotated" relative to the other in the complex plane.
+\end{airesult}

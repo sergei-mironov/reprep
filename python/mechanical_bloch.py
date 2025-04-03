@@ -19,7 +19,7 @@ class PendulumProblem:
   g:float=9.81
 # }}}
 
-# {{{ Simulation
+# class Simulation: # {{{
 
 @dataclass
 class Simulation:
@@ -37,36 +37,33 @@ class Simulation:
       self.xp = self.xa + self.xb
     if self.xm is None:
       self.xm = self.xa - self.xb
+# }}}
 
-# }}} Simulation
-
-# {{{ Schedule
-
+# class Schedule # {{{
 Time = float
-DriveEnabled = list[tuple[Time,Time]]  # [(Start, Duration)]
+# DriveEnabled = list[tuple[Time,Time]]  # [(Start, Duration)]
 
 class Schedule:
   """ Encodes the time input parameters. """
   tspan:tuple[Time,Time]   # Overall simulation time span, (Start, Stop).
   time:ndarray             # Time points within the simulation time span.
-  drive:DriveEnabled       # Time segments when `wdrive` signal is enabled.
+  tcutoff:Time             # Time when we turn the drive off
 
-  def __init__(self, drive:DriveEnabled|None=None):
+  def __init__(self, tcutoff:Time|None=None):
     nt = 1000
     self.tspan = (0, 90)
     self.time = np.linspace(self.tspan[0], self.tspan[1], nt)
-    self.drive = drive if drive is not None else [(0.0,float('inf'))]
-
-# }}} Schedule
-
-def within(t:Time, sched:DriveEnabled) -> bool:# {{{
-  for seg in sched:
-    if seg[0] <= t and t < seg[0]+seg[1]:
-      return True
-  return False
+    self.tcutoff = tcutoff if tcutoff else self.tspan[1]
 # }}}
 
-# class Initials {{{
+# def within(t:Time, sched:DriveEnabled) -> bool:# {{{
+#   for seg in sched:
+#     if seg[0] <= t and t < seg[0]+seg[1]:
+#       return True
+#   return False
+# }}}
+
+# class Initials: # {{{
 @dataclass
 class Initials:
   xa0 :float = 0.01
@@ -107,14 +104,14 @@ def coupled_pendulums(p:PendulumProblem, s:Schedule, i:Initials) -> Simulation: 
   return Simulation(solution.t, *[np.array(x) for x in solution.y])
 # }}}
 
-# {{{ OscProblem
+# class OscProblem: # {{{
 
 @dataclass
 class OscProblem:
   m:       float = 0.9   # mass in kg
   k:       float = 5     # constant for main oscillating springs
-  K:       float = 0.5   # constant for spring connecting two oscillators
-  A:       float = 0.09  # FIXME: select appropriate
+  K:       float = 0.9   # constant for spring connecting two oscillators
+  A:       float = 0.1   # amplitude of the spring constant oscillation
   sigma02: float = (k + K) / m
   sigmac2: float = K / m
   dsigma:  float = sigmac2 / sqrt(sigma02)
@@ -122,11 +119,9 @@ class OscProblem:
   delta:   float = dsigma - wdrive
   sigmaR:  float = sqrt(A**2 + delta**2)
 
-# }}} OscProblem
+# }}}
 
-# {{{ coupled_oscillators
-
-def coupled_oscillators(p:OscProblem, s:Schedule, i:Initials)->Simulation:
+def coupled_oscillators(p:OscProblem, s:Schedule, i:Initials)->Simulation: # {{{
   """ Solve the Coupled oscillators without detuning, as described in the paper "The Classical Bloch
   Equations".
   """
@@ -151,9 +146,8 @@ def coupled_oscillators(p:OscProblem, s:Schedule, i:Initials)->Simulation:
   return Simulation(solution.t, *[np.array(x) for x in solution.y])
 
 # }}}
-# {{{ scheduled_coupled_detuned_oscillators
 
-def scheduled_coupled_detuned_oscillators(p:OscProblem, s:Schedule, i:Initials)->Simulation:
+def scheduled_coupled_detuned_oscillators(p:OscProblem, s:Schedule, i:Initials)->Simulation: # {{{
   """ Solve the Coupled oscillators problem with detuning, as described in the "The Classical Bloch
   Equations" paper. Assume that detuning drive signal is enabled according to the schedule `s`.
   """
@@ -165,7 +159,7 @@ def scheduled_coupled_detuned_oscillators(p:OscProblem, s:Schedule, i:Initials)-
 
   def _ode(t, state):
     xa, va, xb, vb = state
-    dk = -2.0 * sigma0 * m * A * cos(p.wdrive * t) if within(t, s.drive) else 0.0
+    dk = -2.0 * sigma0 * m * A * cos(p.wdrive * t) if t<s.tcutoff else 0.0
     dxadt = va
     dxbdt = vb
     dvadt = - xa * ((k + K) / m - dk / m) + xb * (K / m)
@@ -175,11 +169,9 @@ def scheduled_coupled_detuned_oscillators(p:OscProblem, s:Schedule, i:Initials)-
   solution = solve_ivp(_ode, s.tspan, state0, t_eval=s.time)
   return Simulation(solution.t, *[np.array(x) for x in solution.y])
 
-# }}} scheduled_coupled_detuned_oscillators
-# {{{ coupled_detuned_oscillator_theoretic
+# }}}
 
-def coupled_detuned_oscillator_theoretic(p:OscProblem, s:Schedule, i:Initials)->Simulation:
-  assert s.drive and s.drive[0] == (0.0, float('inf'))
+def coupled_detuned_oscillator_theoretic(p:OscProblem, s:Schedule, i:Initials)->Simulation: # {{{
   t = s.time
   a0 = i.xa0 + i.xb0
   b0 = i.xa0 - i.xb0
@@ -193,10 +185,9 @@ def coupled_detuned_oscillator_theoretic(p:OscProblem, s:Schedule, i:Initials)->
                     xp=np.real(xp), xm=np.real(xm),
                     xpA=np.abs(xp), xmA=np.abs(xm))
 
-# }}} coupled_detuned_oscillator_theoretic
-# {{{ coupled_detuned_oscillators
+# }}}
 
-def coupled_detuned_oscillators_vs_theoretic(p:OscProblem, i:Initials)->Simulation:
+def coupled_detuned_oscillators_vs_theoretic(p:OscProblem, i:Initials)->Simulation: # {{{
   """ Solve the coupled detuned oscillators problem numerically, set the normal mode amplitudes
   using theoretic solution (see the "Mechanical Bloch Equations" paper). Assume the detuning drive
   signal is always enabled.
@@ -206,7 +197,7 @@ def coupled_detuned_oscillators_vs_theoretic(p:OscProblem, i:Initials)->Simulati
   sim_ref = coupled_detuned_oscillator_theoretic(p, s, i)
   return sim, sim_ref
 
-# }}} coupled_detuned_oscillators
+# }}}
 
 def splot(name:str|None, sol:Simulation)->None:# {{{
   """ Plot the simulation results, each oscialltor separately
@@ -237,6 +228,7 @@ def splot(name:str|None, sol:Simulation)->None:# {{{
   else:
     plt.savefig(f"img/mechanical-bloch-f1-{name}.png")
 # }}}
+
 def splotn(name:str|None, sol:Simulation, sol_ref:Simulation|None=None)->str|None:# {{{
   """ Plot the coupled pendulim simulation normal mode results
   """
@@ -272,9 +264,17 @@ def splotn(name:str|None, sol:Simulation, sol_ref:Simulation|None=None)->str|Non
     plt.savefig(f)
     return f
 # }}}
+
 def splotb(name, p:OscProblem, s:Schedule, i:Initials):# {{{
-  assert s.drive and s.drive[0] == (0.0, float('inf'))
-  t = s.time
+  # assert s.drive and s.drive[0] == (0.0, float('inf'))
+  tcutoff: Time = s.tcutoff
+  t: ndarray = s.time
+
+  # Split the t array based on tcutoff
+  t = t[t < tcutoff]
+  # t_greater_than_or_equal_cutoff = t[t >= tcutoff]
+  # t = t_less_than_cutoff
+
   a0 = i.xa0 + i.xb0
   b0 = i.xa0 - i.xb0
 
