@@ -17,6 +17,7 @@ c = get_config()
 c.InteractiveShellApp.exec_lines = []
 c.InteractiveShellApp.exec_lines.append('%load_ext autoreload')
 c.InteractiveShellApp.exec_lines.append('%autoreload 2')
+c.InteractiveShellApp.exec_lines.append('%xmode Plain')
 c.InteractiveShellApp.exec_lines.append('%config Application.verbose_crash=False')
 
 # from IPython.terminal.prompts import ClassicPrompts

@@ -30,6 +30,7 @@
 \begin{python}
 %load_ext autoreload
 %autoreload 2
+%xmode Plain
 # import pennylane as qml
 import numpy as np
 import matplotlib.pyplot as plt
@@ -416,17 +417,51 @@ The latter is calculated using Numpy directly:
   %result
   \begin{python}
   def coupled_detuned_oscillator_theoretic(p:OscProblem, s:Schedule, i:Initials)->Simulation:
+    # Given parameters and variables (these would need to be defined elsewhere in your actual code)
+    # s, i, and p variables need to be established in the actual environment
+  
+    def _calc(t):
+      a0 = i.xa0 + i.xb0
+      b0 = i.xa0 - i.xb0
+      a_ = a0 * jnp.cos((p.A/2.0) * t) + 1j * b0 * jnp.sin((p.A/2.0) * t)
+      b_ = b0 * jnp.cos((p.A/2.0) * t) + 1j * a0 * jnp.sin((p.A/2.0) * t)
+      a = a_ * jnp.exp(-1j * (p.wdrive/2.0) * t)
+      b = b_ * jnp.exp(+1j * (p.wdrive/2.0) * t)
+      xp = a * jnp.exp(1j * jnp.sqrt(p.sigma02) * t)
+      xm = b * jnp.exp(1j * jnp.sqrt(p.sigma02) * t)
+      xa = (xp + xm) / 2
+      xb = (xp - xm) / 2
+      return xa, xb
+      # return xa, xb
+  
+    jax_calc = jax.jit(_calc)
+    jax_dcalc = jax.jacfwd(jax_calc)
+  
+    @partial(jnp.vectorize)
+    def _x(t):
+      return _calc(t)
+  
+    @partial(jnp.vectorize)
+    def _v(t):
+      # print('t',t.shape)
+      va, vb = jax_dcalc(t)
+      # print('res',va.shape, vb.shape)
+      return va, vb
+  
     t = s.time
-    a0 = i.xa0 + i.xb0
-    b0 = i.xa0 - i.xb0
-    a_ = a0 * np.cos((p.A/2.0) * t) + 1j * b0 * np.sin((p.A/2.0) * t)
-    b_ = b0 * np.cos((p.A/2.0) * t) + 1j * a0 * np.sin((p.A/2.0) * t)
-    a = a_ * np.exp(-1j * (p.wdrive/2.0) * t)
-    b = b_ * np.exp(+1j * (p.wdrive/2.0) * t)
-    xp = a * np.exp(1j * np.sqrt(p.sigma02) * t)
-    xm = b * np.exp(1j * np.sqrt(p.sigma02) * t)
-    return Simulation(t, None, None, None, None,
-                      xp=np.real(xp), xm=np.real(xm),
+    jt = jnp.array(t)
+  
+    # Calculate the derivatives
+    xa, xb = _x(jt)
+    # 'speeds' will contain the first derivatives of xp and xm with respect to t
+    va, vb = _v(jt)
+    # xb,vb,xp,xm = [np.zeros(3) for _ in range(4)]
+    # Restoring xp and xm back
+    xp = xa + xb
+    xm = xa - xb
+  
+    return Simulation(t, xa, va, xb, vb,
+                      xp=xp, xm=xm,
                       xpA=np.abs(xp), xmA=np.abs(xm))
   \end{python}
   %noresult
@@ -435,11 +470,14 @@ The latter is calculated using Numpy directly:
 We create the problem instance, run the simulation and plot the normal mode coordinates.
 
   \begin{python}
+  plt.close('all')
   from mechanical_bloch import *
   from math import pi
   p = OscProblem()
   i = Initials()
-  sim, sim_ref = coupled_detuned_oscillators_vs_theoretic(p, i)
+  s = Schedule()
+  sim = scheduled_coupled_detuned_oscillators(p, s, i)
+  sim_ref = coupled_detuned_oscillator_theoretic(p, s, i)
   fig1 = splotn("dosc", sim, sim_ref)
   \end{python}
 
@@ -473,8 +511,6 @@ We create the problem instance, run the simulation and plot the normal mode coor
   [[0.         0.         0.         0.        ]
    [0.         0.00900889 0.01801704 0.02702374]
    [1.         0.99995942 0.99983768 0.99963479]]
-  Cannot install event loop hook for "qt" when running with `--simple-prompt`.
-  NOTE: Tk is supported natively; use Tk apps and Tk backends with `--simple-prompt`.
   <Figure size 500x500 with 1 Axes>
   \end{result}
   \end{comment}
@@ -512,7 +548,9 @@ We create the problem instance, run the simulation and plot the normal mode coor
 \end{figure}
 
 
-\section{Discussion}
+\section{AI Discussions}
+
+\subsection{Bloch sphere}
 
 \begin{ai}
 Can you think of any Python libraries for plotting Bloch spherese?
@@ -662,3 +700,188 @@ complex numbers, where \( r_1 \) and \( r_2 \) are the magnitudes and \( \theta_
 
 This measures how much one complex number is "rotated" relative to the other in the complex plane.
 \end{airesult}
+
+
+\subsection{Sympy}
+
+\begin{ai}
+Hi AI. Consider an oscillator problem: given a mass on a spring, write its complex solution for x
+(the coordinate) as a Sympy function of time.
+\end{ai}
+
+\begin{airesult}
+To write a complex solution for the position \( x(t) \) of a mass on a spring using SymPy, we need
+to represent the solution to the harmonic oscillator problem.
+
+The differential equation for a mass \( m \) on a spring with spring constant \( k \) is given by:
+
+\[
+m \frac{d^2x}{dt^2} + kx = 0
+\]
+
+The general complex solution to this harmonic oscillator problem can be written as:
+
+\[
+x(t) = A e^{i\omega t} + B e^{-i\omega t}
+\]
+
+where \( A \) and \( B \) are constants determined by initial conditions, and \(\omega =
+\sqrt{\frac{k}{m}}\) is the angular frequency.
+
+\vsp
+
+Let's write this solution as a function of time using SymPy:
+
+\begin{python}
+import sympy as sp
+
+# Define the symbols
+t = sp.symbols('t', real=True)
+A, B = sp.symbols('A B', complex=True)
+omega = sp.symbols('omega', real=True, positive=True)
+
+# Define the complex solution for x(t)
+x_t = A * sp.exp(sp.I * omega * t) + B * sp.exp(-sp.I * omega * t)
+
+# Display the solution
+x_t
+\end{python}
+
+This code will create a SymPy expression representing the complex solution \( x(t) \) for the mass
+on a spring system.
+\end{airesult}
+
+\begin{python}
+import sympy as sp
+
+# Define the symbols
+t = sp.symbols('t', real=True)
+A, B = sp.symbols('A B', complex=True)
+omega = sp.symbols('omega', real=True, positive=True)
+
+# Define the complex solution for x(t)
+x_t = A * sp.exp(sp.I * omega * t) + B * sp.exp(-sp.I * omega * t)
+
+# Display the solution
+x_t
+\end{python}
+
+\begin{result}
+A*exp(I*omega*t) + B*exp(-I*omega*t)
+\end{result}
+
+
+\begin{ai}
+Great! Now please use Sympy to calculate the time-derivative of x to get the equation for speed.
+\end{ai}
+
+\begin{airesult}
+To calculate the time derivative of \( x(t) \) to find the velocity (or speed) of the mass on the
+spring, we can use SymPy's differentiation capabilities. The velocity \( v(t) \) is the first
+derivative of the position \( x(t) \) with respect to time \( t \).
+
+\vsp
+
+Here's how you can do it in SymPy:
+
+\begin{python}
+# Calculate the derivative of x_t with respect to time t
+v_t = sp.diff(x_t, t)
+
+# Display the velocity equation
+v_t
+\end{python}
+
+The resulting expression \( v(t) \) will give you the velocity of the mass as a function of time:
+
+\[
+v(t) = \frac{dx}{dt} = i\omega A e^{i\omega t} - i\omega B e^{-i\omega t}
+\]
+
+This velocity equation reflects the time rate of change of the position \( x(t) \).
+\end{airesult}
+
+\begin{python}
+# Calculate the derivative of x_t with respect to time t
+v_t = sp.diff(x_t, t)
+
+# Display the velocity equation
+v_t
+\end{python}
+
+\begin{result}
+I*A*omega*exp(I*omega*t) - I*B*omega*exp(-I*omega*t)
+\end{result}
+
+
+\begin{ai}
+Great! Now lest define $x_0$ and $v_0$ and use Sympy to calculate formulas for $A$ and $B$ from
+these values!
+\end{ai}
+
+\begin{airesult}
+To find expressions for the constants \( A \) and \( B \) in terms of the initial conditions \( x_0
+\) (initial position) and \( v_0 \) (initial velocity), we can set up a system of equations. These
+conditions are:
+
+\[
+x(0) = x_0 = A + B
+\]
+
+\[
+v(0) = v_0 = i\omega A - i\omega B
+\]
+
+\vsp
+
+We can solve these equations using SymPy to express \( A \) and \( B \) in terms of \( x_0 \) and \(
+v_0 \):
+
+\begin{python}
+# Define initial conditions
+x_0, v_0 = sp.symbols('x_0 v_0', real=True)
+
+# Create equations from initial conditions
+eq1 = sp.Eq(A + B, x_0)
+eq2 = sp.Eq(sp.I * omega * A - sp.I * omega * B, v_0)
+
+# Solve for A and B
+solutions = sp.solve((eq1, eq2), (A, B))
+
+# Display solutions for A and B
+solutions
+\end{python}
+
+The solution will provide the expressions for \( A \) and \( B \) in terms of \( x_0 \) and \( v_0
+\):
+
+\[
+A = \frac{x_0}{2} + \frac{v_0}{2i\omega}
+\]
+
+\[
+B = \frac{x_0}{2} - \frac{v_0}{2i\omega}
+\]
+
+These expressions allow you to determine the constants \( A \) and \( B \) given the initial
+conditions of the system.
+\end{airesult}
+
+\begin{python}
+# Define initial conditions
+x_0, v_0 = sp.symbols('x_0 v_0', real=True)
+
+# Create equations from initial conditions
+eq1 = sp.Eq(A + B, x_0)
+eq2 = sp.Eq(sp.I * omega * A - sp.I * omega * B, v_0)
+
+# Solve for A and B
+solutions = sp.solve((eq1, eq2), (A, B))
+
+# Display solutions for A and B
+solutions
+\end{python}
+
+\begin{result}
+{A: (omega*x_0 - I*v_0)/(2*omega), B: (omega*x_0 + I*v_0)/(2*omega)}
+\end{result}

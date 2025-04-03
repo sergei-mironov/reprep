@@ -9,6 +9,11 @@ import matplotlib.pyplot as plt
 from dataclasses import dataclass, field
 from math import sqrt, cos, exp
 from qutip import Bloch
+from functools import partial
+import jax
+import jax.numpy as jnp
+
+from .types import Initials, OscProblem
 
 # PendulumProblem {{{
 @dataclass
@@ -63,15 +68,6 @@ class Schedule:
 #   return False
 # }}}
 
-# class Initials: # {{{
-@dataclass
-class Initials:
-  xa0 :float = 0.01
-  va0 :float = 0.0
-  xb0 :float = 0.01
-  vb0 :float = 0.0
-# }}}
-
 def coupled_pendulums(p:PendulumProblem, s:Schedule, i:Initials) -> Simulation: # {{{
   """ Coupled pendulums without detuning. As described in "Waves and Oscillations. Prelude to
   Quantum Mechanincs".
@@ -102,23 +98,6 @@ def coupled_pendulums(p:PendulumProblem, s:Schedule, i:Initials) -> Simulation: 
   # Solve the system of ODEs
   solution = solve_ivp(_ode, s.tspan, y0, t_eval=s.time)
   return Simulation(solution.t, *[np.array(x) for x in solution.y])
-# }}}
-
-# class OscProblem: # {{{
-
-@dataclass
-class OscProblem:
-  m:       float = 0.9   # mass in kg
-  k:       float = 5     # constant for main oscillating springs
-  K:       float = 0.9   # constant for spring connecting two oscillators
-  A:       float = 0.1   # amplitude of the spring constant oscillation
-  sigma02: float = (k + K) / m
-  sigmac2: float = K / m
-  dsigma:  float = sigmac2 / sqrt(sigma02)
-  wdrive:  float = dsigma
-  delta:   float = dsigma - wdrive
-  sigmaR:  float = sqrt(A**2 + delta**2)
-
 # }}}
 
 def coupled_oscillators(p:OscProblem, s:Schedule, i:Initials)->Simulation: # {{{
@@ -172,30 +151,43 @@ def scheduled_coupled_detuned_oscillators(p:OscProblem, s:Schedule, i:Initials)-
 # }}}
 
 def coupled_detuned_oscillator_theoretic(p:OscProblem, s:Schedule, i:Initials)->Simulation: # {{{
+  # Given parameters and variables (these would need to be defined elsewhere in your actual code)
+  # s, i, and p variables need to be established in the actual environment
+
+  def _calc(t):
+    a0 = i.xa0 + i.xb0
+    b0 = i.xa0 - i.xb0
+    a_ = a0 * jnp.cos((p.A/2.0) * t) + 1j * b0 * jnp.sin((p.A/2.0) * t)
+    b_ = b0 * jnp.cos((p.A/2.0) * t) + 1j * a0 * jnp.sin((p.A/2.0) * t)
+    a = a_ * jnp.exp(-1j * (p.wdrive/2.0) * t)
+    b = b_ * jnp.exp(+1j * (p.wdrive/2.0) * t)
+    xp = a * jnp.exp(1j * jnp.sqrt(p.sigma02) * t)
+    xm = b * jnp.exp(1j * jnp.sqrt(p.sigma02) * t)
+    xa = (xp + xm) / 2
+    xb = (xp - xm) / 2
+    return xa, xb
+
+  jax_calc = jax.jit(_calc)
+  jax_dcalc = jax.jacfwd(jax_calc)
+
+  @partial(jnp.vectorize)
+  def _x(t):
+    return jax_calc(t)
+
+  @partial(jnp.vectorize)
+  def _v(t):
+    return jax_dcalc(t)
+
   t = s.time
-  a0 = i.xa0 + i.xb0
-  b0 = i.xa0 - i.xb0
-  a_ = a0 * np.cos((p.A/2.0) * t) + 1j * b0 * np.sin((p.A/2.0) * t)
-  b_ = b0 * np.cos((p.A/2.0) * t) + 1j * a0 * np.sin((p.A/2.0) * t)
-  a = a_ * np.exp(-1j * (p.wdrive/2.0) * t)
-  b = b_ * np.exp(+1j * (p.wdrive/2.0) * t)
-  xp = a * np.exp(1j * np.sqrt(p.sigma02) * t)
-  xm = b * np.exp(1j * np.sqrt(p.sigma02) * t)
-  return Simulation(t, None, None, None, None,
-                    xp=np.real(xp), xm=np.real(xm),
+  jt = jnp.array(t)
+  xa, xb = _x(jt)
+  va, vb = _v(jt)
+  xp = xa + xb
+  xm = xa - xb
+
+  return Simulation(t, xa, va, xb, vb,
+                    xp=xp, xm=xm,
                     xpA=np.abs(xp), xmA=np.abs(xm))
-
-# }}}
-
-def coupled_detuned_oscillators_vs_theoretic(p:OscProblem, i:Initials)->Simulation: # {{{
-  """ Solve the coupled detuned oscillators problem numerically, set the normal mode amplitudes
-  using theoretic solution (see the "Mechanical Bloch Equations" paper). Assume the detuning drive
-  signal is always enabled.
-  """
-  s = Schedule()
-  sim = scheduled_coupled_detuned_oscillators(p, s, i)
-  sim_ref = coupled_detuned_oscillator_theoretic(p, s, i)
-  return sim, sim_ref
 
 # }}}
 
@@ -237,7 +229,7 @@ def splotn(name:str|None, sol:Simulation, sol_ref:Simulation|None=None)->str|Non
 
   # Plot for xa
   plt.subplot(211)
-  plt.plot(sol.t, sol.xp, label=r'Numeric $x_+$', color='b')
+  plt.plot(sol.t, np.real(sol.xp), label=r'Numeric $x_+$', color='b')
   if sol_ref is not None:
     plt.plot(sol_ref.t, sol_ref.xpA, label=r'Theoretic $|x_+|$', color='g')
   plt.ylabel('x+ (m)')
@@ -247,7 +239,7 @@ def splotn(name:str|None, sol:Simulation, sol_ref:Simulation|None=None)->str|Non
 
   # Plot for xb
   plt.subplot(212, sharex=plt.gca())
-  plt.plot(sol.t, sol.xm, label=r'Numeric $x_-$', color='r')
+  plt.plot(sol.t, np.real(sol.xm), label=r'Numeric $x_-$', color='r')
   if sol_ref is not None:
     plt.plot(sol_ref.t, sol_ref.xmA, label=r'Theoretic $|x_-|$', color='g')
   plt.xlabel('Time (s)')
